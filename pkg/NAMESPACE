@@ -1,0 +1,29 @@
+export(
+	estimate.f,
+	estimate.ab, 
+	model,
+	P,
+	dP,
+	rss,
+	iterate,
+	solution,
+	aic,
+	peak.pick,
+	peak.pick.data,
+	plot.iterates,
+	plot.trials,
+	plot.solution,
+	plot.sims,
+	plot.freq,
+	plot.data, 
+	lowpass,
+	detrend,
+	demean,
+	makeSims,
+	makeSims2,
+	makeSims3,
+	est.snr,
+	Delta
+)
+
+
