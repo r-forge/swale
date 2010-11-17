@@ -1,29 +1,49 @@
 export(
-	estimate.f,
-	estimate.ab, 
-	model,
-	P,
-	dP,
-	rss,
+	makePoly,
+	fdDeriv,
+	anDerivPoly,
+	cleanTrials,
+	peakPick,
 	iterate,
-	solution,
-	aic,
-	peak.pick,
-	peak.pick.data,
-	plot.iterates,
-	plot.trials,
-	plot.solution,
-	plot.sims,
-	plot.freq,
-	plot.data, 
+	makeStart,
+	calcSolution,
+	swaleEEG,
+	plotSingleTrials,
+	plotSolution,
+	eeg.plot,
 	lowpass,
 	detrend,
 	demean,
-	makeSims,
-	makeSims2,
-	makeSims3,
-	est.snr,
-	Delta
+	s2t,
+	estimateSNR,
+	interval2Hz,
+	hz2interval,
+	simulateEEGsignal,
+	makeNoise,
+	calculateSNR,
+	estimate.f,
+	average.f,
+	split.f.window,
+	split.f.one,
+	split.f.fix,
+	estimate.ab,
+	model,
+	rss,
+	aic
 )
 
+exportPattern("^[\\.]")
 
+exportClasses(
+	version,
+	basis,
+	eeg.data,
+	swale.internal,
+	swale.solution,
+	control
+)
+
+exportMethods(
+	plot,
+	show
+)
