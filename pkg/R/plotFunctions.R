@@ -132,35 +132,44 @@ function(swalesol)
 	
 	
 	#plot amp densities
-	if(length(.swale.solution.discard(swalesol))>0)	{
+	disc = which(.swale.solution.discard(swalesol)!=0)
+	if(length(disc)>0) {
 		amps = matrix(.swale.solution.amplitude(swalesol)[-which(.swale.solution.discard(swalesol)!=0),],,ncol(.swale.solution.amplitude(swalesol)))
 	} else amps = .swale.solution.amplitude(swalesol)
-	
-	allden = density(amps)
-	plot(NA,NA,xlim=range(allden$x),ylim=range(allden$y)*1.5,xlab='',ylab='',main='Amplitude distributions',bty='n',axes=F)
-	axis(1)
-	axis(2,at=axTicks(2))
-	for(wave in 1:ncol(.swale.solution.amplitude(swalesol))) {
-		lines(allden$x,density(amps[,wave])$y,col=wave+1,lwd=3)
+		
+	allden = try(density(amps),silen=T)
+	if(class(allden)!='try-error') {
+		plot(NA,NA,xlim=range(allden$x),ylim=range(allden$y)*1.5,xlab='',ylab='',main='Amplitude distributions',bty='n',axes=F)
+		axis(1)
+		axis(2,at=axTicks(2))
+		for(wave in 1:ncol(.swale.solution.amplitude(swalesol))) {
+			lines(allden$x,density(amps[,wave])$y,col=wave+1,lwd=3)
+		}
+	} else {
+		plot(NA,NA,xlim=c(0,1),ylim=c(0,1),bty='n',axes=F,xlab='',ylab='')
 	}
-	
+
 	#plot latency densities
-	if(length(.swale.solution.discard(swalesol))>0)	{
+	disc = which(.swale.solution.discard(swalesol)!=0)
+	if(length(disc)>0) {
 		lats = matrix(.swale.solution.latency(swalesol)[-which(.swale.solution.discard(swalesol)!=0),],,ncol(.swale.solution.latency(swalesol)))
 	} else lats = .swale.solution.latency(swalesol)
 	
-	allden = density(lats)	
-	
-	plot(NA,NA,xlim=range(allden$x),ylim=range(allden$y)*1.5,xlab='',ylab='',main='Latency distributions',bty='n',axes=F)
-	axis(1)
-	axis(2,at=axTicks(2))
-	for(wave in 1:ncol(.swale.solution.latency(swalesol))) {
-		lines(allden$x,density(lats[,wave])$y,col=wave+1,lwd=3)
+	allden = try(density(lats),silen=T)	
+	if(class(allden)!='try-error') {
+		plot(NA,NA,xlim=range(allden$x),ylim=range(allden$y)*1.5,xlab='',ylab='',main='Latency distributions',bty='n',axes=F)
+		axis(1)
+		axis(2,at=axTicks(2))
+		for(wave in 1:ncol(.swale.solution.latency(swalesol))) {
+			lines(allden$x,density(lats[,wave])$y,col=wave+1,lwd=3)
+		}
+	} else {
+		plot(NA,NA,xlim=c(0,1),ylim=c(0,1),bty='n',axes=F,xlab='',ylab='')
 	}
 	
 	#plot discarded data
 	rng = range(c(.swale.solution.model(swalesol),eegdat))
-	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab='mV',bty='n',axes=F,main=paste('Null trials (',length(which(.swale.solution.discard(swalesol)!=0)),')',sep=''))
+	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab='mV',bty='n',axes=F,main=paste('Discarded trials (',length(which(.swale.solution.discard(swalesol)!=0)),')',sep=''))
 	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
 	axis(2)
 	if(length(.swale.solution.discard(swalesol))>0) {
@@ -168,7 +177,7 @@ function(swalesol)
 			lines(eegdat[i,],col=i+1,lwd=1)
 		}
 		
-		if(length(.swale.solution.discard(swalesol))>1) lines(apply(eegdat[which(.swale.solution.discard(swalesol)!=0),],2,mean),lty=1,lwd=3,col=gray(0)) 
+		if(length(which(.swale.solution.discard(swalesol)!=0))>1) lines(apply(eegdat[which(.swale.solution.discard(swalesol)!=0),],2,mean),lty=1,lwd=3,col=gray(0)) 
 	}  
 	
 	

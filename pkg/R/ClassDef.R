@@ -21,8 +21,8 @@ setClass(
 	prototype=prototype(
 		version=1,
 		build=0,
-		update=1,
-		svnrev=7
+		update=4,
+		svnrev=9
 	)#,
 	#package='swale'
 )
@@ -95,6 +95,9 @@ setClass(
 				amplitude='matrix',
 				latency='matrix',
 				model='matrix',
+				latencyRange='numeric',
+				pp.latency='matrix',
+				pp.amplitude='matrix',
 				aic='numeric',
 				discard='numeric',
 				internal='ANY',

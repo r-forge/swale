@@ -131,6 +131,17 @@ standMethod <- function(x, value) {x@data<- value;x}
 setGeneric(slotreplace,standGen)
 setReplaceMethod(funcname,classname,standMethod)
 classname <-'eeg.data'
+funcname <-'.eeg.data.trend'
+standGen <- function(object) standardGeneric('.eeg.data.trend')
+standMethod <- function(object) object@trend
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.eeg.data.trend<-'
+standGen <- function(x, value) standardGeneric('.eeg.data.trend<-')
+standMethod <- function(x, value) {x@trend<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'eeg.data'
 funcname <-'.eeg.data.trials'
 standGen <- function(object) standardGeneric('.eeg.data.trials')
 standMethod <- function(object) object@trials
@@ -183,6 +194,17 @@ setMethod(funcname,classname,standMethod)
 slotreplace <-'.eeg.data.condition<-'
 standGen <- function(x, value) standardGeneric('.eeg.data.condition<-')
 standMethod <- function(x, value) {x@condition<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'eeg.data'
+funcname <-'.eeg.data.within'
+standGen <- function(object) standardGeneric('.eeg.data.within')
+standMethod <- function(object) object@within
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.eeg.data.within<-'
+standGen <- function(x, value) standardGeneric('.eeg.data.within<-')
+standMethod <- function(x, value) {x@within<- value;x}
 setGeneric(slotreplace,standGen)
 setReplaceMethod(funcname,classname,standMethod)
 classname <-'eeg.data'
@@ -348,6 +370,39 @@ setMethod(funcname,classname,standMethod)
 slotreplace <-'.swale.solution.model<-'
 standGen <- function(x, value) standardGeneric('.swale.solution.model<-')
 standMethod <- function(x, value) {x@model<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'swale.solution'
+funcname <-'.swale.solution.latencyRange'
+standGen <- function(object) standardGeneric('.swale.solution.latencyRange')
+standMethod <- function(object) object@latencyRange
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.swale.solution.latencyRange<-'
+standGen <- function(x, value) standardGeneric('.swale.solution.latencyRange<-')
+standMethod <- function(x, value) {x@latencyRange<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'swale.solution'
+funcname <-'.swale.solution.pp.latency'
+standGen <- function(object) standardGeneric('.swale.solution.pp.latency')
+standMethod <- function(object) object@pp.latency
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.swale.solution.pp.latency<-'
+standGen <- function(x, value) standardGeneric('.swale.solution.pp.latency<-')
+standMethod <- function(x, value) {x@pp.latency<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'swale.solution'
+funcname <-'.swale.solution.pp.amplitude'
+standGen <- function(object) standardGeneric('.swale.solution.pp.amplitude')
+standMethod <- function(object) object@pp.amplitude
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.swale.solution.pp.amplitude<-'
+standGen <- function(x, value) standardGeneric('.swale.solution.pp.amplitude<-')
+standMethod <- function(x, value) {x@pp.amplitude<- value;x}
 setGeneric(slotreplace,standGen)
 setReplaceMethod(funcname,classname,standMethod)
 classname <-'swale.solution'

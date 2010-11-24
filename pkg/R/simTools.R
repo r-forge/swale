@@ -103,10 +103,13 @@ function(data,snr,noisemethod)
 	
 	#create and fill noise matrix
 	noise = matrix(NA,nrow(data),ncol(data))
-	trial_sdnoise=max(abs(apply(data,2,mean)))/(snr/sqrt(nrow(data)))
-	if(snr==Inf) trial_sdnoise = 0
-	for(i in 1:nrow(noise)) 	noise[i,] = rnorm(ncol(data),0,trial_sdnoise)
-
+	#trial_sdnoise=apply(data,1,function(x) {max((x))/(snr)})
+	trial_sdnoise=rep(max(apply(data,2,mean))/snr,nrow(data))
+	
+	if(snr==Inf) trial_sdnoise = rep(0,nrow(data))
+	
+	for(i in 1:nrow(noise)) 	noise[i,] = rnorm(ncol(data),0,trial_sdnoise[i])
+	
 	#make correlated noise
 	if(noisemethod[1]=='pink') {
 		noise = lowpass(noise,filsd=as.numeric(noisemethod[2]),fillen=100,filmean=50)
@@ -158,5 +161,40 @@ calculateSNR <- function(data,noise,meth='FT')
 }
 
 
+plotAmpLat <- function(dat,sol,plot=T)
+#plot Amplitude and Latency data and estimates
+{
+	
+	disc = sol@discard
+	
+	quartz(title='Amplitude')
+	layout(1);par(las=1)
+	plot(NA,NA,xlim=range(dat$amps),ylim=range(sol@amplitude,na.rm=T),xlab='Data',ylab='Estimate',axes=T,bty='n')
+	abline(0,1)
+	if(length(which(disc>0))>0) {
+		points(dat$amps[which(disc==0)],sol@amplitude[which(disc==0)],pch=19,col=1)
+		points(dat$amps[which(disc==1)],sol@amplitude[which(disc==1)],pch='X',col=gray(.5))	
+		ampcor = cor.test(dat$amps[which(disc==0)],sol@amplitude[which(disc==0)])
+	} else {
+		points(dat$amps,sol@amplitude,pch=19,col=1)
+		ampcor = cor.test(dat$amps,sol@amplitude)
+	}
+	
+	quartz(title='Latency')
+	layout(1);par(las=1)
+	plot(NA,NA,xlim=range(dat$lats),ylim=range(sol@latency,na.rm=T),xlab='Data',ylab='Estimate',axes=T,bty='n')
+	abline(0,1)
+	if(length(which(disc>0))>0) {
+		points(dat$lats[which(disc==0)],sol@latency[which(disc==0)],pch=19,col=1)
+		points(dat$lats[which(disc==1)],sol@latency[which(disc==1)],pch='X',col=gray(.5))
+		latcor = cor.test(dat$lats[which(disc==0)],sol@latency[which(disc==0)])
+	} else {
+		points(dat$lats,sol@latency,pch=19,col=1)
+		latcor = cor.test(dat$lats,sol@latency)
+	}
+	
+	return(invisible(list(ampcor=ampcor,latcor=latcor)))
+	
+}
 
 
