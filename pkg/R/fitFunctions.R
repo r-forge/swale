@@ -69,7 +69,7 @@ function(swaledat,control=new('control'))
 		if(iterNum>1) gradient = c(gradient,.swale.internal.rss(swaledat_new)-objective[iterNum-1])
 		
 		#show gradient and objective information
-		if(.control.output(control)) cat(sprintf('%3d: %10.0f ~ (%16.6f)',iterNum,objective[iterNum],gradient[iterNum]),'\n')
+		if(.control.output(control)) cat(sprintf('%3d: %10.0f ~ (%16.9f)',iterNum,objective[iterNum],gradient[iterNum]),'\n')
 		
 		#check if gradient is smaller than convergence or maxIter is reached
 		if(iterNum>2) if(abs(gradient[iterNum])<.control.iter.convergence(control)) exitIterate=TRUE

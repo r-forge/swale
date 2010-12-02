@@ -13,10 +13,15 @@
 #add discards
 
 simulateEEGsignal <-
-function(signal=c(150,-200),peakwidth=15,mVscale=500,trials=40,samples=350,sample.freq=512,amp.dist='norm',amp.sd=.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
+function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
 # simulate EEG datasets
 {
-	funcall = list(signal=signal,peakwidth=peakwidth,mVscale=mVscale,trials=trials,samples=samples,sample.freq=sample.freq,amp.dist=amp.dist,amp.sd=amp.sd,amp.mean=amp.mean,amp.range=amp.range,lat.dist=lat.dist,lat.sd=lat.sd,lat.mean=lat.mean,lat.range=lat.range,snr=snr,noisemethod=noisemethod,linkmethod=linkmethod,plot=plot)
+	if(sigmeth=='model' & length(signal)>1) {
+		warning('Model signal can only be used with one waveform, using only waveform[1].')
+		signal = signal[1]
+	}
+	
+	funcall = list(signal=signal,sigmeth=sigmeth,peakwidth=peakwidth,mVscale=mVscale,trials=trials,samples=samples,sample.freq=sample.freq,amp.dist=amp.dist,amp.sd=amp.sd,amp.mean=amp.mean,amp.range=amp.range,lat.dist=lat.dist,lat.sd=lat.sd,lat.mean=lat.mean,lat.range=lat.range,snr=snr,noisemethod=noisemethod,linkmethod=linkmethod,plot=plot)
 	
 	#in HZ
 	ms = samples*(1/sample.freq)*1000
@@ -68,7 +73,20 @@ function(signal=c(150,-200),peakwidth=15,mVscale=500,trials=40,samples=350,sampl
 		f = numeric(samples)
 		for(j in 1:nwave) {
 			if(signal[j]<0) neg=-1 else neg=1
-			f = f + dnorm(1:samples,(abs(signal[j])-lats[i,j]),peakwidth)*amps[i,j]*mVscale*neg
+			if(sigmeth=='shift') f = f + dnorm(1:samples,(abs(signal[j])-lats[i,j]),peakwidth)*amps[i,j]*mVscale*neg
+			if(sigmeth=='model') {
+				
+				#make basis object
+				basis = makePoly(24,samples,'FD')
+				
+				s = matrix(dnorm(1:samples,(abs(signal[j])),peakwidth),,1)*mVscale*neg
+				
+				fb = (t(basis@matrix)%*%s)
+				fs = basis@matrix%*%fb
+				ds = basis@deriv%*%fb
+				
+				f = f + amps[i,j]*(fs+ds*lats[i,j])
+			}
 		}
 		data[i,] = f
 	}
