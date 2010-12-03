@@ -45,10 +45,11 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 	amps = matrix(NA,trials,nwave)
 	for(wave in 1:nwave) {
 		if(amp.dist=='norm') amps[,wave] = rnorm(trials,amp.mean,amp.sd)
+		if(amp.dist=='lnorm') amps[,wave] = rlnorm(trials,amp.mean-1,amp.sd/5) 
 		amps[,wave][amps[,wave]>amp.range[2]]=amp.range[2]
 		amps[,wave][amps[,wave]<amp.range[1]]=amp.range[1]
 	}
-	
+
 	#create latency matrix
 	lats = matrix(NA,trials,nwave)
 	for(wave in 1:nwave) {
@@ -65,6 +66,19 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 				lats[,wave]=lats[,1]
 			}
 		}
+	}
+	
+	
+	#rescale amps to mean 1
+	for(wave in 1:nwave) {
+		amps[,wave] = amps[,wave]/mean(amps[,wave])
+	}
+
+	#order trials according to lats
+	for(wave in 1:nwave) {
+		lord = order(lats[,wave])
+		amps[,wave] = amps[,wave][lord]
+		lats[,wave] = lats[,wave][lord]
 	}
 	
 	#create and fill datamatrix
@@ -88,7 +102,17 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 				f = f + amps[i,j]*(fs+ds*lats[i,j])
 			}
 		}
+		
 		data[i,] = f
+		#y <- data[i,]
+		#x <- seq(1:length(y))
+		#trend <- lm(y ~ x)
+		
+		#tr=coef(trend)[2]*x
+		#tr=tr+coef(trend)[1]
+		
+		#data[i,] <- data[i,] - tr 
+		
 	}
 	
 	#make noise

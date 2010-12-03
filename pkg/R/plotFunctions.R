@@ -190,7 +190,7 @@ function(dat)
 {
 	require(colorRamps)
 	
-	#if(min(dat)<0) {
+		#if(min(dat)<0) {
 		layout(cbind(rbind(matrix(1,8,10),matrix(3,2,10)),rep(2,10)))
 		par(las=1,mar=c(1,4,4,1)+0.1,mgp=c(3,1,0))
 		image(t(dat),ylab='trial',axes=F,col=matlab.like(64))

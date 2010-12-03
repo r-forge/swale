@@ -33,15 +33,15 @@ function(data,filsd=10,fillen=100,filmean=50)
 }
 
 detrend <- 
-function(data) 
+function(data,meantrend=F) 
 #remove linear trend from data
 {
 	
 	trenddata = data
-	
+		
 	for(i in 1:nrow(data)) {
 		
-		y <- data[i,]
+		if(meantrend) y <- apply(data,2,mean) else y <- data[i,]
 		x <- seq(1:length(y))
 		
 		trend <- lm(y ~ x)
@@ -55,6 +55,9 @@ function(data)
 	
 	return(list(data=data,trend=trenddata))
 }
+
+
+
 
 demean <- 
 function(data)
