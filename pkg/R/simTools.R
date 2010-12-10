@@ -104,15 +104,6 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 		}
 		
 		data[i,] = f
-		#y <- data[i,]
-		#x <- seq(1:length(y))
-		#trend <- lm(y ~ x)
-		
-		#tr=coef(trend)[2]*x
-		#tr=tr+coef(trend)[1]
-		
-		#data[i,] <- data[i,] - tr 
-		
 	}
 	
 	#make noise
@@ -145,16 +136,25 @@ function(data,snr,noisemethod)
 	
 	#create and fill noise matrix
 	noise = matrix(NA,nrow(data),ncol(data))
-	#trial_sdnoise=apply(data,1,function(x) {max((x))/(snr)})
 	trial_sdnoise=rep(max(apply(data,2,mean))/snr,nrow(data))
 	
 	if(snr==Inf) trial_sdnoise = rep(0,nrow(data))
 	
-	for(i in 1:nrow(noise)) 	noise[i,] = rnorm(ncol(data),0,trial_sdnoise[i])
+	if(noisemethod[1]=='white') {
+		for(i in 1:nrow(noise)) 	noise[i,] = rnorm(ncol(data),0,trial_sdnoise[i])
+	}
 	
 	#make correlated noise
-	if(noisemethod[1]=='pink') {
+	if(noisemethod[1]=='lp') {
 		noise = lowpass(noise,filsd=as.numeric(noisemethod[2]),fillen=100,filmean=50)
+	}
+	
+	#make correlated noise
+	if(noisemethod[1]=='ar') {
+		order = attr(noisemethod,'order')
+		ar = attr(noisemethod,'ar')
+		for(i in 1:nrow(noise)) noise[i,] = arima.sim(list(order=c(order,0,0),ar=ar),n=ncol(data))
+	
 	}
 	
 	return(noise)
