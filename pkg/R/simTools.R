@@ -110,17 +110,43 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 	noise = makeNoise(data,snr,noisemethod)
 	
 	#add noise
+	if(noisemethod[1]=='ar') {
+		dataplusnoise = data
+		mbet = max(apply(data,2,mean))
+		mnoise = mean(apply(noise,1,sd))
+		for(i in 1:nrow(data)) {
+			data[i,]=data[i,]/mbet
+			data[i,]=data[i,]*mnoise*snr	
+		}
+	}	
+	
 	dataplusnoise = data + noise
+
 	
 	#check SNRS
-	snrinfo = list(input.snr=snr,calc.h=calculateSNR(data,noise,'H'),est.h=estimateSNR(dataplusnoise,'H'),calc.ft=calculateSNR(data,noise,'FT'),est.ft=estimateSNR(dataplusnoise,'FT'))
+	nsd = dsd = numeric(nrow(data))
+	for(i in 1:nrow(data)) {
+		rng = which(abs(data[i,])>1e-3)
+		dsd[i] = sd(data[i,rng])
+		nsd[i] = sd(noise[i,rng])
+	}	
+	snrQQ = (dsd)/(nsd)
+	snrQQdB = (20*log(dsd/nsd,base=10))
+
+	snrinfo = list(input.snr=snr,calc.h=calculateSNR(data,noise,'H'),est.h=estimateSNR(dataplusnoise,'H'),calc.ft=calculateSNR(data,noise,'FT'),est.ft=estimateSNR(dataplusnoise,'FT'),snrQQ=snrQQ,snrQQdB=snrQQdB)
+	
+	
 	if(plot) {
 		cat(' *** SNR info ****\n')
 		cat(' Calculated SNR (max avg/sdnoise) = ',snrinfo$calc.h,'\n')
 		cat(' Estimated SNR (Handy method)     = ',snrinfo$est.h,'\n')
 		
-		cat(' Calculated SNR (ss/sn)           = ',snrinfo$calc.ft,'\n')
+		cat(' Calculated SNR (FT: ss/sn)       = ',snrinfo$calc.ft,'\n')
 		cat(' Estimated SNR (Fein/Turetsky)    = ',snrinfo$est.ft,'\n')
+		
+		cat(' Calculated SNR (QQ)              = ',median(snrinfo$snrQQ),'\n')
+		cat(' Calculated SNR 20log10(QQ)       = ',median(snrinfo$snrQQdB),'\n')
+				
 		cat(' ***\n')
 	}
 	
@@ -154,7 +180,7 @@ function(data,snr,noisemethod)
 		order = attr(noisemethod,'order')
 		ar = attr(noisemethod,'ar')
 		for(i in 1:nrow(noise)) noise[i,] = arima.sim(list(order=c(order,0,0),ar=ar),n=ncol(data))
-	
+		
 	}
 	
 	return(noise)
@@ -198,6 +224,7 @@ calculateSNR <- function(data,noise,meth='FT')
 		
 		return(snr)
 	}
+	
 	
 	return(NULL)
 }

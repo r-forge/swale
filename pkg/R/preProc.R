@@ -87,7 +87,7 @@ estimateSNR <- function(data,meth='FT')
 #estimate snr (using fein & turetsky method and Handy method)
 {
 	
-	meth = match.arg(meth,c('FT','H'))
+	meth = match.arg(meth,c('FT','H','SD'))
 	
 	#Fein & Turetsky
 	if(meth=='FT') {
@@ -124,6 +124,21 @@ estimateSNR <- function(data,meth='FT')
 		
 		return(snr)
 	}
+	
+	#sd
+	if(meth=='SD') {
+		avg <- matrix(apply(data,2,mean),nrow(data),ncol(data),byrow=T)
+		dat <- matrix(avg,nrow(data),ncol(data),byrow=T)
+		
+		noise = dat-avg
+		
+		snr = apply(dat,1,sd)/apply(noise,1,sd)
+		
+		return(snr)
+	}
+	
+	
+	
 	
 	return(NULL)
 }
