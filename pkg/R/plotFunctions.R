@@ -42,7 +42,7 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 	for(trial in 1:nrow(eegdat)) {
 		if(!.swale.solution.discard(swalesol)[trial]) {
 			par(ask=T,las=1)
-			plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab='mV',bty='n',axes=F,main=paste('trial [',trial,']',sep=''))
+			plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste('trial [',trial,']',sep=''))
 			axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
 			axis(2)
 			
@@ -77,7 +77,7 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 			
 		} #discardloop
 	}
-	
+	layout(1)
 	par(ask=F)
 }
 
@@ -103,7 +103,7 @@ function(swalesol)
 	#plot averge and averagemodel
 	rng = range(c(avgmod,avgdat))
 	par(ask=F,las=1)
-	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab='mV',bty='n',axes=F,main=paste(.eeg.data.channel(.swale.internal.eeg.data(.swale.solution.internal(swalesol))),':',.eeg.data.condition(.swale.internal.eeg.data(.swale.solution.internal(swalesol))),' - ','Model fit (AIC): ',round(.swale.solution.aic(swalesol)),sep=''))
+	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste(.eeg.data.channel(.swale.internal.eeg.data(.swale.solution.internal(swalesol))),':',.eeg.data.condition(.swale.internal.eeg.data(.swale.solution.internal(swalesol))),' - ','Model fit (AIC): ',round(.swale.solution.aic(swalesol)),sep=''))
 	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
 	axis(2)
 	lines(avgdat,lty=1,lwd=3,col=gray(.5))
@@ -111,7 +111,7 @@ function(swalesol)
 	
 	
 	#plot waves
-	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=c(-2,2),xlab='time (ms)',ylab='',bty='n',axes=F,main='Waveform')
+	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=c(-2,2),xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main='Waveform')
 	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
 	axis(2)
 	for(wave in 1:ncol(.swale.solution.waveform(swalesol))) {
@@ -121,7 +121,7 @@ function(swalesol)
 	}
 	
 	#plot derivs
-	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=c(-2,2),xlab='time (ms)',ylab='',bty='n',axes=F,main='Derivative')
+	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=c(-2,2),xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main='Derivative')
 	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
 	axis(2)
 	for(wave in 1:ncol(.swale.solution.derivwave(swalesol))) {
@@ -169,7 +169,7 @@ function(swalesol)
 	
 	#plot discarded data
 	rng = range(c(.swale.solution.model(swalesol),eegdat))
-	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab='mV',bty='n',axes=F,main=paste('Discarded trials (',length(which(.swale.solution.discard(swalesol)!=0)),')',sep=''))
+	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste('Discarded trials (',length(which(.swale.solution.discard(swalesol)!=0)),')',sep=''))
 	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
 	axis(2)
 	if(length(.swale.solution.discard(swalesol))>0) {
@@ -180,7 +180,7 @@ function(swalesol)
 		if(length(which(.swale.solution.discard(swalesol)!=0))>1) lines(apply(eegdat[which(.swale.solution.discard(swalesol)!=0),],2,mean),lty=1,lwd=3,col=gray(0)) 
 	}  
 	
-	
+	layout(1)
 }
 
 
@@ -202,7 +202,7 @@ function(dat)
 		par(mar=c(5.1, 0, 4.1, 4.1),mgp=c(2,1,0))
 		image(legbar,col=matlab.like(64),axes=F,xlim=c(0,.01))
 		#axis(4,at=seq(0,1,.1),labels=c(round(seq(min(legbar),0,abs(min(legbar))/5),0),round(seq(0,max(legbar),max(legbar)/5),0)[-1]))
-		mtext('mV',4,cex=0.7,outer=F,adj=-1.5)
+		mtext(expression(paste(mu,'V',sep='')),4,cex=0.7,outer=F,adj=-1.5)
 		
 		avgdat=apply(dat,2,mean)
 		par(mar=c(5.1, 4.1, .1, 1.1),mgp=c(3,1,0))
@@ -213,8 +213,34 @@ function(dat)
 		#axis(1)
 		mtext('time in units',1,cex=0.7,padj=2.5)
 		
+		layout(1)
+		
 	#} else { cat('No negatives in dataset -nyi-\n') }
 	
 }
 
+
+
+plotTraces <-
+function(swalesol) 
+{
+	#data
+	eegdat = .eeg.data.data(.swale.internal.eeg.data(.swale.solution.internal(swalesol)))
+	sampRate = .eeg.data.sampRate(.swale.internal.eeg.data(.swale.solution.internal(swalesol)))
+	
+	#averages
+	avgdat = apply(eegdat,2,mean)
+	
+	yrng = range(eegdat)
+	par(las=1,ask=F)
+	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=yrng,bty='n',xlab='time(ms)',ylab=expression(paste(mu,'V',sep='')),axes=F,main='Single Trials')
+	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	axis(2)
+	
+	for(i in 1:nrow(eegdat)) lines(eegdat[i,],lwd=1,col=i)
+		
+	lines(avgdat,lwd=4,col=1)
+	layout(1)
+
+}
 

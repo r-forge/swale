@@ -120,7 +120,7 @@ function(swaledat)
 	.swale.solution.aic(solution) = aic(swaledat)
 	
 	#cleanTrials
-	solution = cleanTrials(solution)
+	#solution = cleanTrials(solution)
 	
 	return(solution)
 	

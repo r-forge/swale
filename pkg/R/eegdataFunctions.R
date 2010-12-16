@@ -9,17 +9,10 @@
 #peakPick
 
 peakPick <- 
-function(object,window) 
+function(eegdat,window) 
 #peak pick data or swale model
 {
 
-	if(class(object)=='swale.solution') {
-		eegdat = .swale.solution.model(object)
-		window = .swale.internal..swale.solution.internal(object)
-		
-	}
-	if(class(object)=='eeg.data') eegdat = .eeg.data.data(object)
-	
 	peakmat = matrix(NA,nrow(eegdat),nrow(window))
 	
 	#latency PP

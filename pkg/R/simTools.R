@@ -13,7 +13,7 @@
 #add discards
 
 simulateEEGsignal <-
-function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
+function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=0.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
 # simulate EEG datasets
 {
 	if(sigmeth=='model' & length(signal)>1) {
@@ -139,14 +139,16 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 	if(plot) {
 		cat(' *** SNR info ****\n')
 		cat(' Calculated SNR (max avg/sdnoise) = ',snrinfo$calc.h,'\n')
-		cat(' Estimated SNR (Handy method)     = ',snrinfo$est.h,'\n')
+		#cat(' Estimated SNR (Handy method)     = ',snrinfo$est.h,'\n')
 		
 		cat(' Calculated SNR (FT: ss/sn)       = ',snrinfo$calc.ft,'\n')
-		cat(' Estimated SNR (Fein/Turetsky)    = ',snrinfo$est.ft,'\n')
+		#cat(' Estimated SNR (Fein/Turetsky)    = ',snrinfo$est.ft,'\n')
 		
-		cat(' Calculated SNR (QQ)              = ',median(snrinfo$snrQQ),'\n')
-		cat(' Calculated SNR 20log10(QQ)       = ',median(snrinfo$snrQQdB),'\n')
-				
+		#cat(' Calculated SNR (QQ)              = ',mean(snrinfo$snrQQ),'\n')
+		#cat(' Calculated SNR 20log10(QQ)       = ',mean(snrinfo$snrQQdB),'\n')
+		
+		snrHeaven(data,noise)
+		
 		cat(' ***\n')
 	}
 	
@@ -264,6 +266,41 @@ plotAmpLat <- function(dat,sol,plot=T)
 	
 	return(invisible(list(ampcor=ampcor,latcor=latcor)))
 	
+}
+
+
+snrHeaven <- function(data,noise=NULL)
+{
+		
+	if(is.null(noise)) {
+		cat('Estimated noise\n')
+		noise = data
+		avg = apply(data,2,mean)
+		for(i in 1:nrow(data)) noise[i,] = data[i,]-avg
+	} else cat('Real noise\n') 
+	
+	
+	rng = apply(data,1,function(x) which(abs(x)>1e-3))
+	
+	vardata = varnoise = numeric(nrow(data))
+	for(i in 1:nrow(data)) {
+		vardata[i] = var(data[i,rng[[i]]])
+		varnoise[i] = var(noise[i,rng[[i]]]) 
+	}
+	
+	meanvardata = mean(vardata)
+	
+	iyer = mean(meanvardata/varnoise)
+	ivan = 10*log(meanvardata/mean(varnoise),base=10)	
+	truc = mean( 20*log(sqrt(vardata)/sqrt(varnoise),base=10) )	
+	quia = mean( sqrt(vardata)/sqrt(varnoise) )
+			
+	cat('iyer [.2    1] =', iyer, '\n')
+	cat('ivan [-27 -18] =', ivan, 'dB\n')
+	cat('truc [-34  27] =', truc, 'dB\n')
+	cat('quia [.5    3] =', quia, '\n')
+	
+	return(invisible(NULL))
 }
 
 
