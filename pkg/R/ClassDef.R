@@ -22,7 +22,7 @@ setClass(
 		version=1,
 		build=0,
 		update=9,
-		svnrev=13
+		svnrev=14
 	)#,
 	#package='swale'
 )

@@ -238,30 +238,26 @@ plotAmpLat <- function(dat,sol,plot=T)
 	
 	disc = sol@discard
 	
-	quartz(title='Amplitude')
-	layout(1);par(las=1)
-	plot(NA,NA,xlim=range(dat$amps),ylim=range(sol@amplitude,na.rm=T),xlab='Data',ylab='Estimate',axes=T,bty='n')
+	plot(NA,NA,xlim=range(dat$amps),ylim=range(sol@amplitude,na.rm=T),xlab='Data',ylab='Estimate',axes=T,bty='n',main='Amplitude')
 	abline(0,1)
 	if(length(which(disc>0))>0) {
-		points(dat$amps[which(disc==0)],sol@amplitude[which(disc==0)],pch=19,col=1)
-		points(dat$amps[which(disc==1)],sol@amplitude[which(disc==1)],pch='X',col=gray(.5))	
-		ampcor = cor.test(dat$amps[which(disc==0)],sol@amplitude[which(disc==0)])
+		points(dat$amps[which(disc==0),1],sol@amplitude[which(disc==0)],pch=19,col=1)
+		points(dat$amps[which(disc==1),1],sol@amplitude[which(disc==1)],pch='X',col=gray(.5))	
+		ampcor = cor.test(dat$amps[which(disc==0),1],sol@amplitude[which(disc==0)])
 	} else {
-		points(dat$amps,sol@amplitude,pch=19,col=1)
-		ampcor = cor.test(dat$amps,sol@amplitude)
+		points(dat$amps[,1],sol@amplitude,pch=19,col=1)
+		ampcor = cor.test(dat$amps[,1],sol@amplitude)
 	}
 	
-	quartz(title='Latency')
-	layout(1);par(las=1)
-	plot(NA,NA,xlim=range(dat$lats),ylim=range(sol@latency,na.rm=T),xlab='Data',ylab='Estimate',axes=T,bty='n')
+	plot(NA,NA,xlim=range(dat$lats),ylim=range(sol@latency,na.rm=T),xlab='Data',ylab='Estimate',axes=T,bty='n',main='Latency')
 	abline(0,1)
 	if(length(which(disc>0))>0) {
-		points(dat$lats[which(disc==0)],sol@latency[which(disc==0)],pch=19,col=1)
-		points(dat$lats[which(disc==1)],sol@latency[which(disc==1)],pch='X',col=gray(.5))
-		latcor = cor.test(dat$lats[which(disc==0)],sol@latency[which(disc==0)])
+		points(dat$lats[which(disc==0),1],sol@latency[which(disc==0)],pch=19,col=1)
+		points(dat$lats[which(disc==1),1],sol@latency[which(disc==1)],pch='X',col=gray(.5))
+		latcor = cor.test(dat$lats[which(disc==0),1],sol@latency[which(disc==0)])
 	} else {
-		points(dat$lats,sol@latency,pch=19,col=1)
-		latcor = cor.test(dat$lats,sol@latency)
+		points(dat$lats[,1],sol@latency,pch=19,col=1)
+		latcor = cor.test(dat$lats[,1],sol@latency)
 	}
 	
 	return(invisible(list(ampcor=ampcor,latcor=latcor)))

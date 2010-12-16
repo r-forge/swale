@@ -77,8 +77,8 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 			
 		} #discardloop
 	}
-	layout(1)
-	par(ask=F)
+	#layout(1)
+	#par(ask=F)
 }
 
 plotSolution <-
@@ -180,7 +180,7 @@ function(swalesol)
 		if(length(which(.swale.solution.discard(swalesol)!=0))>1) lines(apply(eegdat[which(.swale.solution.discard(swalesol)!=0),],2,mean),lty=1,lwd=3,col=gray(0)) 
 	}  
 	
-	layout(1)
+	#layout(1)
 }
 
 
@@ -213,7 +213,7 @@ function(dat)
 		#axis(1)
 		mtext('time in units',1,cex=0.7,padj=2.5)
 		
-		layout(1)
+		#layout(1)
 		
 	#} else { cat('No negatives in dataset -nyi-\n') }
 	
@@ -240,7 +240,7 @@ function(swalesol)
 	for(i in 1:nrow(eegdat)) lines(eegdat[i,],lwd=1,col=i)
 		
 	lines(avgdat,lwd=4,col=1)
-	layout(1)
+	#layout(1)
 
 }
 
