@@ -12,7 +12,7 @@
 #swaleEEG
 
 iterate <-
-function(swaledat,control=new('control')) 
+function(swaledat,control=new('control'),posGradStop=F) 
 #iterate a f/ab estimation (with or without split)
 {
 	
@@ -73,7 +73,7 @@ function(swaledat,control=new('control'))
 		
 		#check if gradient is smaller than convergence or maxIter is reached
 		if(iterNum>2) if(abs(gradient[iterNum])<.control.iter.convergence(control)) exitIterate=TRUE
-		if(iterNum>1) if(gradient[iterNum]>0) exitIterate=TRUE
+		if(posGradStop) if(iterNum>1) if(gradient[iterNum]>0) exitIterate=TRUE
 		if(iterNum==.control.iter.limit(control)) exitIterate=TRUE
 		
 		if(exitIterate==FALSE) swaledat_old = swaledat_new

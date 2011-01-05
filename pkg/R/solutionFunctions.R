@@ -45,7 +45,7 @@ function(swalesol,window=NULL,prec.fac=1.5,plot=F)
 	if(length(grep('control',slotNames(new('swale.solution'))))!=0) swalesol = new('swale.solution',swalesol,discard=integer(0),control=new('control')) else swalesol = new('swale.solution',swalesol,discard=integer(0))
 	
 	
-	nsamp = .eeg.data.samples(.swale.internal.eeg.data(.swale.solution.internal(sol.one)))
+	nsamp = .eeg.data.samples(.swale.internal.eeg.data(.swale.solution.internal(swalesol)))
 	
 	if(is.null(window)) window = c(1,nsamp) 
 	absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[1]:window[2]]))+window[1]-1
