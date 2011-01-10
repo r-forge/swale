@@ -128,6 +128,69 @@ function(swaledat)
 }
 
 
+iterateDiscard <-
+function(swaledat,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F) 
+#iterate and discard trials until good fit is reached
+{
+	stopDisc = FALSE 
+	removals = numeric(0)
+	
+	while(!stopDisc) {
+		#iterate
+		solution = iterate(swaledat,control,posGradStop)
+		solution = calcSolution(solution)
+		
+		#check solution
+		if(is.null(latRange)) latRange = setMaxLat(solution,prec.fac=1.5,plot=F)
+		solution = cleanTrials(solution,lat.thres=latRange,amp.thres=ampRange)
+		
+		#determine discards
+		if(sum(.swale.solution.discard(solution))==0) {
+			stopDisc = TRUE
+			break()
+		} else {
+			
+			if(length(which(.swale.solution.discard(solution)!=0))>=(nrow(.eeg.data.data(.swale.internal.eeg.data(.swale.solution.internal(solution))))-1)) { 
+				warning('Stopping iterations no valid model!')
+				stopDisc=TRUE
+				break()
+			}
+			
+			#set data 
+			oldat = .swale.internal.eeg.data(.swale.solution.internal(solution))
+			
+			#make new data with discards removed
+			newdat = .eeg.data.data(.swale.internal.eeg.data(.swale.solution.internal(solution)))
+			
+			remrows = which(.swale.solution.discard(solution)!=0)
+			newdat = newdat[-remrows,]
+			newdat = detrend(newdat,meantrend=F)
+			
+			#make new data element
+			data = new('eeg.data')
+			.eeg.data.data(data) = as.matrix(newdat$data)
+			.eeg.data.trend(data) = as.matrix(newdat$trend)
+			.eeg.data.trials(data) = nrow(newdat$data)
+			.eeg.data.samples(data) = .eeg.data.samples(oldat)
+			.eeg.data.sampRate(data) = .eeg.data.sampRate(oldat)
+			.eeg.data.channel(data) = .eeg.data.channel(oldat)
+			.eeg.data.condition(data) = .eeg.data.condition(oldat)
+						
+			swaledat = new('swale.internal',eeg.data=data,basis=.swale.internal.basis(.swale.solution.internal(solution)))
+			.control.start.value(control) = makeStart(swaledat)
+			
+		} #discardsloop
+		removals = c(removals,list(remrows))
+		cat('Discarded',length(which(.swale.solution.discard(solution)!=0)),'trials. Refitting....\n')
+		
+	} #main iteration loop
+			
+	cat('No more discards, returning.\n')
+	return(list(solution=solution,removals=removals))
+	
+}
+
+
 
 swaleEEG <-
 function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control')) 
