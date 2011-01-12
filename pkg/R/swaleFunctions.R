@@ -50,13 +50,18 @@ function(swaledat)
 	a = .swale.internal.amps(swaledat)
 	b = .swale.internal.lats(swaledat)
 	f = .swale.internal.waves(swaledat)
+	trials = nrow(.eeg.data.data(.swale.internal.eeg.data(swaledat)))
 	
 	#calculate average f
-	fhat = rep(0,nrow(TP))
-	for(i in 1:ncol(a)) fhat = fhat + ((TP%*%f[,i])*mean(a[,i])+(dTP%*%f[,i])*mean(b[,i]))
-	
-	#Y = (TP%x%t(apply(a,2,mean)) + dTP%x%t(apply(b,2,mean)))%*%as.vector(t(f))
-	.swale.internal.waves(swaledat) = t(TP)%*%fhat
+	fhat = matrix(0,trials,nrow(TP))
+	for(i in 1:ncol(a)) {
+		for(trial in 1:trials) {
+		 	fhat[trial,] = fhat[trial,] + ((TP%*%f[,i])*(a[trial,i])+(dTP%*%f[,i])*(b[trial,i]))
+		}
+	}
+	fhatmean = as.vector(apply(fhat,2,mean))
+
+	.swale.internal.waves(swaledat) = t(TP)%*%fhatmean
 	
 	return(swaledat)
 	

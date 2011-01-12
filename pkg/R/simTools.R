@@ -13,7 +13,7 @@
 #add discards
 
 simulateEEGsignal <-
-function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=0.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
+function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=0.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
 # simulate EEG datasets
 {
 	if(sigmeth=='model' & length(signal)>1) {
@@ -75,11 +75,11 @@ function(signal=c(150,-200),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 	}
 
 	#order trials according to lats
-	for(wave in 1:nwave) {
-		lord = order(lats[,wave])
-		amps[,wave] = amps[,wave][lord]
-		lats[,wave] = lats[,wave][lord]
-	}
+	#for(wave in 1:nwave) {
+		#lord = order(lats[,wave])
+		#amps[,wave] = amps[,wave][lord]
+		#lats[,wave] = lats[,wave][lord]
+	#}
 	
 	#create and fill datamatrix
 	data = matrix(NA,trials,samples)

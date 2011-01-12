@@ -192,16 +192,79 @@ function(swaledat,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 
 
 
-swaleEEG <-
-function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control')) 
-{
 
-	data = new('eeg.data')
+
+
+iterateSplit <-
+function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F) 
+#iterate and split + removal of waves
+{
+	#split up the data	
+	cuts = split.f.one(.swale.solution.internal(swalesol),.control.split.data(control))
+	swalesol_new = split.f.fix(.swale.solution.internal(swalesol),cuts)
+	swalesol_new = estimate.ab(swalesol_new)
 		
+	#set estimation objects
+	TP = .basis.matrix(.swale.internal.basis(swalesol_new))
+	dTP = .basis.deriv(.swale.internal.basis(swalesol_new))
+	a = .swale.internal.amps(swalesol_new)
+	b = .swale.internal.lats(swalesol_new)
+	f = .swale.internal.waves(swalesol_new)
+	origdat = .eeg.data.data(.swale.internal.eeg.data(swalesol_new))
+	trials = nrow(origdat)
+	
+	cat('Reverse estimate\n')
+	solutionlist = vector('list',ncol(f))
+	
+	#reverse estimate
+	for(waves in 1:ncol(f)) {
+		
+		#set correct matrices
+		newdat = origdat
+		cTP = TP
+		cdTP = dTP
+		ca = as.matrix(a[,-waves])
+		cb = as.matrix(b[,-waves])
+		cf = as.matrix(f[,-waves])
+		
+		#remove wavetrend from data 
+		fhat = matrix(0,trials,nrow(cTP))
+		for(i in 1:ncol(ca)) {
+			for(trial in 1:trials) {
+				newdat[trial,] = newdat[trial,] - ((cTP%*%cf[,i])*(ca[trial,i])+(cdTP%*%cf[,i])*(cb[trial,i]))
+			}
+		}		
+	
+		#set swaleobject newdata
+		.eeg.data.data(.swale.internal.eeg.data(swalesol_new)) = newdat
+		control_new = control
+		.control.split.type(control_new)='none'
+		.control.split.data(control_new)=NULL
+		
+		#iterate onewave
+		solution = iterate(swalesol_new,control_new,posGradStop=posGradStop)	
+		solution = calcSolution(solution)
+		solutionlist[[waves]] = list(solution=solution,data=newdat)
+		
+	}
+	
+	
+	cat('Splitted.\n')
+	return(solutionlist)
+	
+}
+
+
+swaleEEG <-
+		function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control')) 
+{
+	
+	data = new('eeg.data')
+	
 	if(is.numeric(which)) {
 		
 		if(class(DATA[[which]])!='bvadata') stop('Input must be of class BVADATA (see EEG package)')
-				
+		
 		.eeg.data.condition(data) = names(DATA)[which]
 		wc = which(dimnames(DATA[[which]]$x())[[2]]==channel)
 		.eeg.data.channel(data) = dimnames(DATA[[which]]$x())[[2]][wc]
@@ -210,7 +273,7 @@ function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control'))
 		
 	} else {
 		if(class(DATA[[match(which,names(DATA))]])!='bvadata') stop('Input must be of class BVADATA (see EEG package)')
-	
+		
 		.eeg.data.condition(data) = which
 		wc = which(dimnames(DATA[[match(which,names(DATA))]]$x())[[2]]==channel)
 		.eeg.data.channel(data) = dimnames(DATA[[match(which,names(DATA))]]$x())[[2]][wc]
@@ -234,5 +297,6 @@ function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control'))
 	solution = calcSolution(solution)
 	
 	return(solution)
-
+	
 }
+
