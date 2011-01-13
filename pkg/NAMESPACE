@@ -8,6 +8,7 @@ export(
 	iterate,
 	iterateDiscard,
 	iterateSplit,
+	autoSplit,
 	makeStart,
 	calcSolution,
 	swaleEEG,

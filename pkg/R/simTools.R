@@ -299,6 +299,50 @@ snrHeaven <- function(data,noise=NULL)
 	return(invisible(NULL))
 }
 
+swaleEEG <-
+		function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control')) 
+{
+	
+	data = new('eeg.data')
+	
+	if(is.numeric(which)) {
+		
+		if(class(DATA[[which]])!='bvadata') stop('Input must be of class BVADATA (see EEG package)')
+		
+		.eeg.data.condition(data) = names(DATA)[which]
+		wc = which(dimnames(DATA[[which]]$x())[[2]]==channel)
+		.eeg.data.channel(data) = dimnames(DATA[[which]]$x())[[2]][wc]
+		.eeg.data.data(data) = t(DATA[[which]]$x()[,wc,])
+		.eeg.data.sampRate(data) = DATA[[which]]$header$`Common Infos`$SamplingInterval ## NOT WORKING!!!!!!!!!!!!!!
+		
+	} else {
+		if(class(DATA[[match(which,names(DATA))]])!='bvadata') stop('Input must be of class BVADATA (see EEG package)')
+		
+		.eeg.data.condition(data) = which
+		wc = which(dimnames(DATA[[match(which,names(DATA))]]$x())[[2]]==channel)
+		.eeg.data.channel(data) = dimnames(DATA[[match(which,names(DATA))]]$x())[[2]][wc]
+		.eeg.data.data(data) = t(DATA[[match(which,names(DATA))]]$x()[,wc,])
+		.eeg.data.sampRate(data) = DATA[[match(which,names(DATA))]]$header$`Common Infos`$SamplingInterval ## NOT WORKING!!!!!!!!!!!!!!
+	}
+	
+	.eeg.data.trials(data) = nrow(.eeg.data.data(data))
+	.eeg.data.samples(data) = ncol(.eeg.data.data(data))
+	
+	cat(.eeg.data.condition(data),'\n')
+	
+	.eeg.data.data(data) = detrend(.eeg.data.data(data))
+	
+	basis = makePoly(npoly,.eeg.data.samples(data),'FD')
+	swaledat = new('swale.internal',eeg.data=data,basis=basis)
+	
+	
+	.control.start.value(control) = makeStart(swaledat)
+	solution = iterate(swaledat,control)
+	solution = calcSolution(solution)
+	
+	return(solution)
+	
+}
 
 
 

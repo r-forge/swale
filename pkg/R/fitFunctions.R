@@ -9,22 +9,22 @@
 #iterate
 #makeStart
 #calcSolution
-#swaleEEG
+#iterateDiscard
+#iterateSplit
+#autoSplit
 
 iterate <-
 function(swaledat,control=new('control'),posGradStop=F) 
 #iterate a f/ab estimation (with or without split)
 {
 	
-	#plot iteration info
-	cat('SWALE\n')
-	cat('Iterations started:',date(),'\n')
 	
 	#check if startingvalues are sane
 	if(nrow(.control.start.value(control))!=ncol(.basis.matrix(.swale.internal.basis(swaledat)))) stop('Length of startingvalues do not match with transform matrix.')
 
 	#set startingvalues
 	.swale.internal.waves(swaledat) = .control.start.value(control)
+	.swale.internal.model(swaledat) = matrix(0,.eeg.data.trials(.swale.internal.eeg.data(swaledat)),.eeg.data.samples(.swale.internal.eeg.data(swaledat)))
 	
 	#do iterations
 	exitIterate = F
@@ -32,8 +32,12 @@ function(swaledat,control=new('control'),posGradStop=F)
 	gradient = NA
 	objective = numeric(0)	
 	
+	#set old to swaledat
 	swaledat_old = swaledat
 	
+	#plot iteration info
+	cat('Intial rss [',round(.swale.internal.rss(rss(swaledat))),'], iterations started at: ',date(),' Running...',sep='')
+		
 	while(!exitIterate) {
 		
 		iterNum = iterNum + 1
@@ -66,8 +70,12 @@ function(swaledat,control=new('control'),posGradStop=F)
 		
 		#calculate objective and gradient
 		objective = c(objective,.swale.internal.rss(swaledat_new))
-		if(iterNum>1) gradient = c(gradient,.swale.internal.rss(swaledat_new)-objective[iterNum-1])
-		
+		if(iterNum>1) {
+			gradient = c(gradient,.swale.internal.rss(swaledat_new)-objective[iterNum-1])
+		} else {
+			if(.control.output(control)) cat('\n')
+		}
+
 		#show gradient and objective information
 		if(.control.output(control)) cat(sprintf('%3d: %10.0f ~ (%16.9f)',iterNum,objective[iterNum],gradient[iterNum]),'\n')
 		
@@ -85,6 +93,8 @@ function(swaledat,control=new('control'),posGradStop=F)
 	.swale.internal.gradient(swaledat_old) = gradient[iterNum-1]
 	
 	solution = new('swale.solution',internal=swaledat_old,control=control)
+	cat('done\n')	
+	cat(' final rss [',round(.swale.internal.rss(swaledat_old)),']\n',sep='')
 	
 	return(solution)
 
@@ -119,12 +129,7 @@ function(swaledat)
 	.swale.solution.derivwave(solution) = .basis.deriv(.swale.internal.basis(swaledat))%*%.swale.internal.waves(swaledat)
 	.swale.solution.aic(solution) = aic(swaledat)
 	
-	#cleanTrials
-	#solution = cleanTrials(solution)
-	
 	return(solution)
-	
-
 }
 
 
@@ -181,23 +186,18 @@ function(swaledat,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 			
 		} #discardsloop
 		removals = c(removals,list(remrows))
-		cat('Discarded',length(which(.swale.solution.discard(solution)!=0)),'trials. Refitting....\n')
+		cat('[discard] Removed',length(which(.swale.solution.discard(solution)!=0)),'trials. Refitting.\n')
 		
 	} #main iteration loop
 			
-	cat('No more discards, returning.\n')
+	cat('All trials valid.\n')
 	return(list(solution=solution,removals=removals))
 	
 }
 
-
-
-
-
-
 iterateSplit <-
 function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F) 
-#iterate and split + removal of waves
+#iterate and split based on removal of estimated waves
 {
 	#split up the data	
 	cuts = split.f.one(.swale.solution.internal(swalesol),.control.split.data(control))
@@ -213,7 +213,7 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 	origdat = .eeg.data.data(.swale.internal.eeg.data(swalesol_new))
 	trials = nrow(origdat)
 	
-	cat('Reverse estimate\n')
+	
 	solutionlist = vector('list',ncol(f))
 	
 	#reverse estimate
@@ -238,8 +238,10 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 		#set swaleobject newdata
 		.eeg.data.data(.swale.internal.eeg.data(swalesol_new)) = newdat
 		control_new = control
-		.control.split.type(control_new)='none'
-		.control.split.data(control_new)=NULL
+		.control.split.type(control_new) = 'none'
+		.control.split.data(control_new) = NULL
+		
+		cat('[split] Fitting wave [',waves,']\n',sep='')
 		
 		#iterate onewave
 		solution = iterate(swalesol_new,control_new,posGradStop=posGradStop)	
@@ -248,55 +250,51 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 		
 	}
 	
+	#rebuild solution
+	soldouble = new('swale.internal')
+	.swale.internal.eeg.data(soldouble) = .swale.internal.eeg.data(.swale.solution.internal(swalesol))
+	.swale.internal.basis(soldouble) = .swale.internal.basis(.swale.solution.internal(swalesol))
 	
-	cat('Splitted.\n')
-	return(solutionlist)
+	#concatenate waves and amps and lats
+	waves = amps = lats = numeric(0)
+	for(i in 1:length(solutionlist)) {
+		waves = cbind(waves,.swale.internal.waves(.swale.solution.internal(solutionlist[[i]]$solution)))
+		amps = cbind(amps,.swale.internal.amps(.swale.solution.internal(solutionlist[[i]]$solution)))
+		lats = cbind(lats,.swale.internal.lats(.swale.solution.internal(solutionlist[[i]]$solution)))
+	}
+	.swale.internal.waves(soldouble) = waves
+	.swale.internal.amps(soldouble) = amps
+	.swale.internal.lats(soldouble) = lats
 	
+	#recalculate model/rss/aic
+	soldouble = model(soldouble)
+	soldouble = rss(soldouble)
+
+	#recalculate solution
+	soldouble = new('swale.solution',internal=soldouble,control=control)	
+	soldouble = calcSolution(soldouble)
+	
+	#return
+	return(soldouble)
 }
 
 
-swaleEEG <-
-		function(DATA,which=1,channel='Fz',npoly=16,deriv='FD',control=new('control')) 
+autoSplit <-
+function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F)
+#split reiterated splitted solution again
 {
+	stopSplit = FALSE
 	
-	data = new('eeg.data')
-	
-	if(is.numeric(which)) {
-		
-		if(class(DATA[[which]])!='bvadata') stop('Input must be of class BVADATA (see EEG package)')
-		
-		.eeg.data.condition(data) = names(DATA)[which]
-		wc = which(dimnames(DATA[[which]]$x())[[2]]==channel)
-		.eeg.data.channel(data) = dimnames(DATA[[which]]$x())[[2]][wc]
-		.eeg.data.data(data) = t(DATA[[which]]$x()[,wc,])
-		.eeg.data.sampRate(data) = DATA[[which]]$header$`Common Infos`$SamplingInterval ## NOT WORKING!!!!!!!!!!!!!!
-		
-	} else {
-		if(class(DATA[[match(which,names(DATA))]])!='bvadata') stop('Input must be of class BVADATA (see EEG package)')
-		
-		.eeg.data.condition(data) = which
-		wc = which(dimnames(DATA[[match(which,names(DATA))]]$x())[[2]]==channel)
-		.eeg.data.channel(data) = dimnames(DATA[[match(which,names(DATA))]]$x())[[2]][wc]
-		.eeg.data.data(data) = t(DATA[[match(which,names(DATA))]]$x()[,wc,])
-		.eeg.data.sampRate(data) = DATA[[match(which,names(DATA))]]$header$`Common Infos`$SamplingInterval ## NOT WORKING!!!!!!!!!!!!!!
+	newsol = swalesol
+	i=1
+	while(!stopSplit) {
+		if(i>1) .swale.internal.waves(.swale.solution.internal(newsol)) = matrix(apply(.swale.internal.waves(.swale.solution.internal(newsol)),1,sum),,1)	
+		soldouble = iterateSplit(newsol,control=control)
+		browser()
+		i=i+1
 	}
 	
-	.eeg.data.trials(data) = nrow(.eeg.data.data(data))
-	.eeg.data.samples(data) = ncol(.eeg.data.data(data))
-	
-	cat(.eeg.data.condition(data),'\n')
-	
-	.eeg.data.data(data) = detrend(.eeg.data.data(data))
-	
-	basis = makePoly(npoly,.eeg.data.samples(data),'FD')
-	swaledat = new('swale.internal',eeg.data=data,basis=basis)
-	
-	
-	.control.start.value(control) = makeStart(swaledat)
-	solution = iterate(swaledat,control)
-	solution = calcSolution(solution)
-	
-	return(solution)
+	return(soldouble)
 	
 }
 
