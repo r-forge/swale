@@ -37,7 +37,8 @@ export(
 	estimate.ab,
 	model,
 	rss,
-	aic
+	aic,
+	bic
 )
 
 exportPattern("^[\\.]")

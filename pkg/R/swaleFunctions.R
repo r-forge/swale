@@ -272,11 +272,26 @@ function(swaledat)
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
 	rss = .swale.internal.rss(swaledat)
 	
-	aicvalue = try(2*k+(n*(log(2*pi*rss/n)+1)))
+	aicvalue = try( 2*k+(n*(log(rss))) )
 	
 	return(aicvalue)
 }
 
+
+bic <-
+function(swaledat) 
+#calculate modelfit
+{
+	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
+	
+	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.amps(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
+	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
+	rss = .swale.internal.rss(swaledat)
+	
+	bicvalue = try( n*(log(rss/n)) + k*log(n) )
+	
+	return(bicvalue)
+}
 
 
 
