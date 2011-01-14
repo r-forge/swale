@@ -38,5 +38,20 @@ setMethod('show',signature(object='eeg.data'),
 )
 
 
+setMethod('show',signature(object='swale.solution'),
+		function(object) {
+			cat('swale solution\n')
+			cat(' basisfunctions  : ','\n')
+			cat(' number of waves : ','\n')
+			cat(' parameters      : ','\n')
+			cat(' AIC:		      : ','\n')
+			cat(' RSS data        : ','\n')
+			cat(' Rsquared        : ','\n')
+			cat(' ','\n')
+			show(object@internal@eeg.data)
+			
+		}
+)
+
 #swalesolution methods
 setMethod('plot',signature(x='swale.solution',y='missing'),function(x) plotSolution(x))

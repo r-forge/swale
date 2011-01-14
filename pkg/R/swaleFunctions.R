@@ -263,7 +263,7 @@ function(swaledat)
 
 
 aic <-
-function(swaledat) 
+function(swaledat,correct=F) 
 #calculate modelfit
 {
 	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
@@ -273,7 +273,8 @@ function(swaledat)
 	rss = .swale.internal.rss(swaledat)
 	
 	aicvalue = try( 2*k+(n*(log(rss))) )
-	
+	if(correct) aicvalue = aicvalue + ( (2*k*(k+1)) / (n-k-1) )
+		
 	return(aicvalue)
 }
 
@@ -286,14 +287,30 @@ function(swaledat)
 	
 	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.amps(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
-	rss = .swale.internal.rss(swaledat)
-	
-	bicvalue = try( n*(log(rss/n)) + k*log(n) )
+	resids = as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat)) - .swale.internal.model(swaledat))
+
+	bicvalue = try( n*(log(var(resids)/n)) + k*log(n) )
 	
 	return(bicvalue)
 }
 
 
-
+Rsq <-
+function(swaledat) 
+{
+	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
+	
+	#set estimation objects
+	Y = .eeg.data.data(.swale.internal.eeg.data(swaledat))
+	yhat = .swale.internal.model(swaledat)
+	
+	#calculate rss (innerproduct of residuals)
+	SSres = as.vector(t(as.vector(Y)-as.vector(yhat))%*%((as.vector(Y)-as.vector(yhat)))) 
+	SStot = as.vector(t(as.vector(Y))%*%((as.vector(Y)))) 
+	
+	Rsq = 1 - (SSres/SStot)
+	
+	return(Rsq)
+}
 
 

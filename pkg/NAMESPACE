@@ -37,6 +37,7 @@ export(
 	estimate.ab,
 	model,
 	rss,
+	Rsq,
 	aic,
 	bic
 )
