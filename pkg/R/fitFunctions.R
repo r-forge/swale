@@ -280,17 +280,26 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 
 
 autoSplit <-
-function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F)
+function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F,gradlim=.1)
 #split reiterated splitted solution again
 {
 	stopSplit = FALSE
 	
 	newsol = swalesol
 	i=1
+	
+	obj = gradient = numeric(0)
 	while(!stopSplit) {
-		if(i>1) .swale.internal.waves(.swale.solution.internal(newsol)) = matrix(apply(.swale.internal.waves(.swale.solution.internal(newsol)),1,sum),,1)	
+		if(i>1) .swale.internal.waves(.swale.solution.internal(newsol)) = matrix(apply(.swale.internal.waves(.swale.solution.internal(soldouble)),1,sum),,1)	
 		soldouble = iterateSplit(newsol,control=control)
-		browser()
+		obj = c(obj,soldouble@internal@rss)
+		
+		if(i>1) {
+			cat('[gradient]',obj[i]-obj[i-1],'\n')
+			gradient = c(gradient,obj[i]-obj[i-1])
+			if(abs(gradient[i-1])<=gradlim) stopSplit=T
+		}
+		
 		i=i+1
 	}
 	
