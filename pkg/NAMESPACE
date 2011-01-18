@@ -9,6 +9,7 @@ export(
 	iterateDiscard,
 	iterateSplit,
 	autoSplit,
+	multiSplit,
 	makeStart,
 	calcSolution,
 	swaleEEG,

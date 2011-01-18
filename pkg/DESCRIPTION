@@ -1,8 +1,8 @@
 Package: swale
 Type: Package
 Title: SWALE: Simultaneous Waveform Amplitude and Latency Estimation.
-Version: 1.1-8
-Date:  2011-01-17
+Version: 1.1-9
+Date:  2011-01-18
 Author: Wouter D. Weeda
 Maintainer: Wouter D. Weeda <w.d.weeda@gmail.com>
 Depends: R (>= 2.12.0), methods, colorRamps
@@ -10,4 +10,4 @@ Description: SWALE is a package to analyze single-trial EEG/MEG data.
 URL: http://swale.r-forge.r-project.org/
 License: GNU (GPL)
 LazyLoad: yes
-Packaged: Mon Jan 17 15:28:08 2011
+Packaged: Tue Jan 18 13:00:37 2011

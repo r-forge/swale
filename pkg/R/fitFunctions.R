@@ -307,3 +307,72 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 	
 }
 
+
+multiSplit <-
+function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F,stepsize=1)
+{
+	
+	swaledat = .swale.solution.internal(swalesol)
+	window = .control.split.data(control)
+	
+	#set estimation objects
+	TP = .basis.matrix(.swale.internal.basis(swaledat))
+	f = .swale.internal.waves(swaledat)
+	ft = TP%*%f
+	
+	#search for maxima within window
+	nc = nrow(window)
+	if(nc>2) {warning('multiSplit not available for more than two splits');return(NULL)}
+	
+	mx = numeric(nc)
+	for(i in 1:nc) 	mx[i] = window[i,1] + which.max(abs(ft[window[i,1]:window[i,2]]))
+	
+	steps = seq(mx[1],mx[2],stepsize)
+	
+	aicvec = numeric(length(steps))
+	
+	cat('[multisplit] fitting',length(steps),'splits...')
+	
+	for(i in 1:length(steps)) 
+	{
+		#split and estimate
+		swalesol_new = split.f.fix(.swale.solution.internal(swalesol),steps[i])
+		swalesol_new = estimate.ab(swalesol_new)
+		
+		#recalculate model/rss/aic
+		swalesol_new = model(swalesol_new)
+		swalesol_new = rss(swalesol_new)
+		
+		#recalculate solution
+		swalesol_new = new('swale.solution',internal=swalesol_new,control=control)	
+		swalesol_new = calcSolution(swalesol_new)
+		
+		aicvec[i] = aic(swalesol_new) 
+		
+	}
+	cat('done\n')
+	#get best fit
+	names(aicvec) = steps
+	bestaic = which.min(aicvec)
+	
+	#split and estimate
+	swalesol_new = split.f.fix(.swale.solution.internal(swalesol),steps[bestaic])
+	swalesol_new = estimate.ab(swalesol_new)
+	
+	#recalculate model/rss/aic
+	swalesol_new = model(swalesol_new)
+	swalesol_new = rss(swalesol_new)
+	
+	#recalculate solution
+	swalesol_new = new('swale.solution',internal=swalesol_new,control=control)	
+	swalesol_new = calcSolution(swalesol_new)
+	
+	.swale.solution.aic(swalesol_new) = aic(swalesol_new)
+	
+	cat(' best AIC (',aicvec[bestaic],') at split ',names(aicvec[bestaic]),'\n',sep='')
+	
+	
+	return(list(solution=swalesol_new,aicvec=aicvec))
+	
+}
+
