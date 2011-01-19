@@ -263,15 +263,13 @@ function(swaledat)
 
 
 aic <-
-function(swaledat,correct=F,addDeriv=F) 
-#calculate modelfit
+function(swaledat,correct=F,adjustWave=1,adjustAmp=1,adjustLat=1,adjustN=0) 
+#calculate modelfit using AIC
 {
 	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
 	
-	if(addDeriv) dm = 2 else dm = 1
-	
-	k = (.basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.waves(swaledat))*dm)+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
-	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
+	k = (.basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.waves(swaledat))*adjustWave)+length(as.vector(.swale.internal.amps(swaledat)))/adjustAmp+length(as.vector(.swale.internal.lats(swaledat)))/adjustLat
+	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))-adjustN
 	rss = .swale.internal.rss(swaledat)
 	
 	aicvalue = try( 2*k+(n*(log(rss))) )
@@ -283,7 +281,7 @@ function(swaledat,correct=F,addDeriv=F)
 
 bic <-
 function(swaledat) 
-#calculate modelfit
+#calculate modelfit using BIC
 {
 	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
 	
@@ -299,6 +297,7 @@ function(swaledat)
 
 Rsq <-
 function(swaledat) 
+#calculate Rsquared value for a model
 {
 	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
 	
@@ -314,5 +313,7 @@ function(swaledat)
 	
 	return(Rsq)
 }
+
+
 
 

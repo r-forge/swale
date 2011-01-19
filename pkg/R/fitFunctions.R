@@ -376,3 +376,45 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 	
 }
 
+testSplits <-
+function(swaledat,control=new('control')) 
+#calculate and test which (amplitude or latency) contribute to the differences
+{
+	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
+	
+	numwave = ncol(.swale.internal.waves(swaledat))
+	numtrial = .eeg.data.trials(.swale.internal.eeg.data(swaledat))
+	
+	if(numwave<=1) warning('Only one wave in model, new models might give same results!')
+	
+	#allfix
+	allfix = swaledat
+	.swale.internal.amps(allfix) = matrix(apply(.swale.internal.amps(swaledat),1,mean),numtrial,numwave)
+	.swale.internal.lats(allfix) = matrix(apply(.swale.internal.lats(swaledat),1,mean),numtrial,numwave)
+	allfix = model(allfix)
+	allfix = rss(allfix)
+	allfix = new('swale.solution',internal=allfix,control=control)	
+	allfix = calcSolution(allfix)
+	.swale.solution.aic(allfix) = aic(allfix,adjustAmp=numwave,adjustLat=numwave)
+	
+	#ampfix
+	ampfix = swaledat
+	.swale.internal.amps(ampfix) = matrix(apply(.swale.internal.amps(swaledat),1,mean),numtrial,numwave)
+	ampfix = model(ampfix)
+	ampfix = rss(ampfix)
+	ampfix = new('swale.solution',internal=ampfix,control=control)	
+	ampfix = calcSolution(ampfix)
+	.swale.solution.aic(ampfix) = aic(ampfix,adjustAmp=numwave)
+	
+	#latfix
+	latfix = swaledat
+	.swale.internal.lats(latfix) = matrix(apply(.swale.internal.lats(swaledat),1,mean),numtrial,numwave)
+	latfix = model(latfix)
+	latfix = rss(latfix)
+	latfix = new('swale.solution',internal=latfix,control=control)	
+	latfix = calcSolution(latfix)
+	.swale.solution.aic(latfix) = aic(latfix,adjustLat=numwave)
+	
+	return(list(allfix=allfix,ampfix=ampfix,latfix=latfix))
+	
+}

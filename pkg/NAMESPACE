@@ -10,6 +10,7 @@ export(
 	iterateSplit,
 	autoSplit,
 	multiSplit,
+	testSplits,
 	makeStart,
 	calcSolution,
 	swaleEEG,
