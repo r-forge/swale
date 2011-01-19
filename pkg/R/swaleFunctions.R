@@ -263,12 +263,14 @@ function(swaledat)
 
 
 aic <-
-function(swaledat,correct=F) 
+function(swaledat,correct=F,addDeriv=F) 
 #calculate modelfit
 {
 	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
 	
-	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.amps(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
+	if(addDeriv) dm = 2 else dm = 1
+	
+	k = (.basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.waves(swaledat))*dm)+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
 	rss = .swale.internal.rss(swaledat)
 	
@@ -285,7 +287,7 @@ function(swaledat)
 {
 	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
 	
-	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.amps(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
+	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.waves(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
 	resids = as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat)) - .swale.internal.model(swaledat))
 
