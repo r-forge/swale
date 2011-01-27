@@ -186,36 +186,34 @@ function(swalesol)
 
 
 eeg.plot <- 
-function(dat,sampRate=512,main='') 
+function(dat,sampRate=512,main='',order=NULL) 
 {
 	require(colorRamps)
 	
-	#if(min(dat)<0) {
-		layout(cbind(rbind(matrix(1,8,10),matrix(3,2,10)),rep(2,10)))
-		par(las=1,mar=c(1,4,4,1)+0.1,mgp=c(3,1,0))
-		image(t(dat),ylab='trial',axes=F,col=matlab.like(64),main=main)
-		axis(2,at=seq(0,1,.25),labels=round(seq(0,dim(dat)[1],dim(dat)[1]/4),0))
-		axis(1,at=seq(0,1,.1),labels=rep('',11))
+	if(!is.null(order)) {
+		dat = dat[order,]
+	}
 	
-		legbar=seq(round(min(dat),0),round(max(dat),0))
-		legbar=matrix(legbar,1,length(legbar))
-		par(mar=c(5.1, 0, 4.1, 4.1),mgp=c(2,1,0))
-		image(legbar,col=matlab.like(64),axes=F,xlim=c(0,.01))
-		axis(4,at=seq(0,1,.1),labels=c(round(seq(min(legbar),0,abs(min(legbar))/5),0),round(seq(0,max(legbar),max(legbar)/5),0)[-1]))
-		mtext(expression(paste(mu,'V',sep='')),4,cex=0.7,outer=F,adj=-1.5)
+	layout(cbind(rbind(matrix(1,8,10),matrix(3,2,10)),rep(2,10)))
+	par(las=1,mar=c(1,4,4,1)+0.1,mgp=c(3,1,0))
+	image(t(dat),ylab='trial',axes=F,col=matlab.like(64),main=main)
+	axis(2,at=seq(0,1,.25),labels=round(seq(0,dim(dat)[1],dim(dat)[1]/4),0))
+	axis(1,at=seq(0,1,.1),labels=rep('',11))
+	
+	legbar=seq(round(min(dat),0),round(max(dat),0))
+	legbar=matrix(legbar,1,length(legbar))
+	par(mar=c(5.1, 0, 4.1, 4.1),mgp=c(2,1,0))
+	image(legbar,col=matlab.like(64),axes=F,xlim=c(0,.01))
+	axis(4,at=seq(0,1,.1),labels=c(round(seq(min(legbar),0,abs(min(legbar))/5),0),round(seq(0,max(legbar),max(legbar)/5),0)[-1]))
+	mtext(expression(paste(mu,'V',sep='')),4,cex=0.7,outer=F,adj=-1.5)
 		
-		avgdat=apply(dat,2,mean)
-		par(mar=c(5.1, 4.1, .1, 1.1),mgp=c(3,1,0))
-		#image(matrix(avgdat,length(avgdat),1),col=matlab.like(64),axes=F)
-		plot(1:length(avgdat),avgdat,bty='n',axes=F,xlab='',ylab=expression(paste(mu,'V',sep='')),type='l',lwd=2)
-		axis(1,pos=0,at=axTicks(1),label=round(axTicks(1)*(1/sampRate)*1000))
-		axis(2)
-		#axis(1)
-		mtext('time (ms)',1,cex=0.7,padj=2.5)
-		
-		#layout(1)
-		
- 	#} else { cat('No negatives in dataset -nyi-\n') }
+	avgdat=apply(dat,2,mean)
+	par(mar=c(5.1, 4.1, .1, 1.1),mgp=c(3,1,0))
+	#image(matrix(avgdat,length(avgdat),1),col=matlab.like(64),axes=F)
+	plot(1:length(avgdat),avgdat,bty='n',axes=F,xlab='',ylab=expression(paste(mu,'V',sep='')),type='l',lwd=2)
+	axis(1,pos=0,at=axTicks(1),label=round(axTicks(1)*(1/sampRate)*1000))
+	axis(2)
+	mtext('time (ms)',1,cex=0.7,padj=2.5)
 	
 }
 
@@ -245,7 +243,7 @@ function(swalesol)
 }
 
 plotTraceAverage <-
-function(simdata,swalesol,what='signal',main='') 
+function(simdata,swalesol,what='signal',main='',yrng=NULL) 
 {
 	#data
 	eegdat = .eeg.data.data(.swale.internal.eeg.data(.swale.solution.internal(swalesol)))
@@ -254,14 +252,15 @@ function(simdata,swalesol,what='signal',main='')
 	#averages
 	avgdat = apply(eegdat,2,mean)
 	
-	yrng = range(apply(simdata$data,2,mean)*1.1)
+	if(is.null(yrng)) yrng = range(apply(simdata$data,2,mean)*1.1)
 	par(las=1,ask=F)
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=yrng,bty='n',xlab='time(ms)',ylab=expression(paste(mu,'V',sep='')),axes=F,main=main)
-	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	axis(1,at=c(77,154,230,307),labels=c(150,300,450,600))
 	axis(2)
 	#if(what=='signal') lines(apply(simdata$data,2,mean),lwd=2,col=1)
 	if(what=='all') {
-		lines(apply(simdata$data,2,mean),lwd=2,col=gray(.7))
+		lines(apply(simdata$data,2,mean),lwd=2,col=gray(.5))
 		lines(swalesol@waveform,lwd=3,col=1)
 	}
 	
@@ -271,5 +270,21 @@ function(simdata,swalesol,what='signal',main='')
 	#layout(1)
 	
 }
+
+eeg.plot.raster <- 
+function(dat,sampRate=512,main='',order=NULL,labs=T) 
+{
+	require(colorRamps)
+	
+	par(las=1)
+	if(!is.null(order)) {
+		dat = dat[order,]
+	}
+	image(1:ncol(dat),1:nrow(dat),t(dat),axes=F,col=matlab.like(64),main=main,xlab='time(ms)',ylab='')
+	if(labs) axis(2,c(1,nrow(dat)/2,nrow(dat)),label=c(1,nrow(dat)/2,nrow(dat)))
+	if(labs) axis(1,at=c(77,154,230,307),labels=c(150,300,450,600))
+	
+}
+
 
 
