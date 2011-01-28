@@ -314,6 +314,31 @@ function(swaledat)
 	return(Rsq)
 }
 
-
+swalecor <-
+function(swalesol) 
+#calculate correlations between amplitude and latency parameters in a solution
+{
+	ncors = ncol(.swale.solution.waveform(swalesol))
+	
+	ampcor = ampcor.p = latcor = latcor.p = matrix(NA,ncors,ncors)
+	
+	valid = which(.swale.solution.discard(swalesol)!=1)
+	
+	if(length(valid)<2) {warning('Not enough valid trials!')} else {
+		
+		for(row in 1:ncors) {
+			for(col in 1:ncors) {
+				ampcor[row,col] = cor.test(.swale.solution.amplitude(swalesol)[valid,row],.swale.solution.amplitude(swalesol)[valid,col])$estimate
+				ampcor.p[row,col] = cor.test(.swale.solution.amplitude(swalesol)[valid,row],.swale.solution.amplitude(swalesol)[valid,col])$p.value
+				latcor[row,col] = cor.test(.swale.solution.latency(swalesol)[valid,row],.swale.solution.latency(swalesol)[valid,col])$estimate
+				latcor.p[row,col] = cor.test(.swale.solution.latency(swalesol)[valid,row],.swale.solution.latency(swalesol)[valid,col])$p.value
+			}
+		}
+		
+		
+	}
+	
+	return(list(amplitude=list(estimate=ampcor,p.value=ampcor.p),latency=list(estimate=latcor,p.value=latcor.p)))
+}
 
 

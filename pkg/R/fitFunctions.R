@@ -95,6 +95,7 @@ function(swaledat,control=new('control'),posGradStop=F)
 	solution = new('swale.solution',internal=swaledat_old,control=control)
 	cat('done\n')	
 	cat(' final rss [',round(.swale.internal.rss(swaledat_old)),']\n',sep='')
+	cat('       aic [',round(aic(swaledat_old)),']\n',sep='')
 	
 	return(solution)
 

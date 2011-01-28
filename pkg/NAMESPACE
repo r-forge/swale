@@ -32,6 +32,7 @@ export(
 	calculateSNR,
 	snrHeaven,
 	plotAmpLat,
+	summarizeModel,
 	estimate.f,
 	average.f,
 	split.f.window,
@@ -42,6 +43,7 @@ export(
 	rss,
 	Rsq,
 	aic,
+	swalecor,
 	bic
 )
 

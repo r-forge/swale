@@ -13,7 +13,7 @@
 #add discards
 
 simulateEEGsignal <-
-function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=0.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE)
+function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=0.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE,poly=20)
 # simulate EEG datasets
 {
 	#if(sigmeth=='model' & length(signal)>1) {
@@ -74,37 +74,52 @@ function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 		amps[,wave] = amps[,wave]/mean(amps[,wave])
 	}
 
-	#order trials according to lats
-	#for(wave in 1:nwave) {
-		#lord = order(lats[,wave])
-		#amps[,wave] = amps[,wave][lord]
-		#lats[,wave] = lats[,wave][lord]
-	#}
-	
 	#create and fill datamatrix
 	data = matrix(NA,trials,samples)
 	for(i in 1:nrow(data)) {
 		f = numeric(samples)
+		
 		for(j in 1:nwave) {
 			if(signal[j]<0) neg=-1 else neg=1
 			if(sigmeth=='shift') f = f + dnorm(1:samples,(abs(signal[j])-lats[i,j]),peakwidth)*amps[i,j]*mVscale*neg
 			if(sigmeth=='model') {
+				if(linkmethod=='none') {
+					
+					#make basis object
+					basis = makePoly(poly,samples,'FD')
+					s = matrix(dnorm(1:samples,(abs(signal[j])),peakwidth),,1)*mVscale*neg
+					
+					fb = (t(basis@matrix)%*%s)
+					fs = basis@matrix%*%fb
+					ds = basis@deriv%*%fb
+					f = f + amps[i,j]*(fs+ds*lats[i,j])
+					
+				}
+			}
+		}
+		
+		if(sigmeth=='model') {
+			if(linkmethod=='all') {
 				
 				#make basis object
-				basis = makePoly(24,samples,'FD')
-				
-				s = matrix(dnorm(1:samples,(abs(signal[j])),peakwidth),,1)*mVscale*neg
+				basis = makePoly(poly,samples,'FD')
+				s=numeric(length(f))
+				for(j in 1:nwave) {
+					if(signal[j]<0) neg=-1 else neg=1
+					s = s + matrix(dnorm(1:samples,(abs(signal[j])),peakwidth),,1)*mVscale*neg
+				}
 				
 				fb = (t(basis@matrix)%*%s)
 				fs = basis@matrix%*%fb
 				ds = basis@deriv%*%fb
-				
-				f = f + amps[i,j]*(fs+ds*lats[i,j])
+				f = f + amps[i,1]*(fs+ds*lats[i,1])
 			}
 		}
 		
 		data[i,] = f
+		
 	}
+
 	
 	#make noise
 	noise = makeNoise(data,snr,noisemethod)

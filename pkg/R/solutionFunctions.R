@@ -72,3 +72,33 @@ function(swalesol,window=NULL,prec.fac=1.5,plot=F)
 	
 	return(latrange)
 }
+
+
+summarizeModel <-
+function(solution1,solution2) 
+{
+	cat('AIC 1: ',.swale.solution.aic(solution1),'\n')
+	cat('AIC 2: ',.swale.solution.aic(solution2),'\n')
+	if(.swale.solution.aic(solution2)<.swale.solution.aic(solution1)) {
+		cat('AIC indicates multiple waveforms\n')
+		
+		cors = swalecor(solution2)
+		
+		if(cors$amplitude$p.value[1,2]<.05) cat('Amplitude fixed.\n') else cat('Amplitude free\n')
+		if(cors$latency$p.value[1,2]<.05) cat('Latency fixed.\n') else cat('Latency free\n')
+		
+		if(cors$amplitude$p.value[1,2]<.05 | cors$latency$p.value[1,2]<.05) {
+			cat('Treat as one waveform model!\n')	
+			return(1)
+		} else { return(2) }
+	
+	
+	} else {
+		cat('AIC indicates one waveform\n')
+		return(1)
+	}
+
+
+
+}
+
