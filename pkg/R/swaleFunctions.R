@@ -288,7 +288,7 @@ function(swaledat)
 	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.waves(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
 	resids = as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat)) - .swale.internal.model(swaledat))
-
+	
 	bicvalue = try( n*(log(var(resids)/n)) + k*log(n) )
 	
 	return(bicvalue)

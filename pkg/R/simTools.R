@@ -16,12 +16,7 @@ simulateEEGsignal <-
 function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,samples=350,sample.freq=512,amp.dist='norm',amp.sd=0.5,amp.mean=1,amp.range=c(-2,2),lat.dist='norm',lat.sd=40,lat.mean=0,lat.range=c(-100,100),snr=10,noisemethod=c('white'),linkmethod='none',plot=TRUE,poly=20)
 # simulate EEG datasets
 {
-	#if(sigmeth=='model' & length(signal)>1) {
-	#	warning('Model signal can only be used with one waveform, using only waveform[1].')
-	#		signal = signal[1]
-	#}
-	
-	funcall = list(signal=signal,sigmeth=sigmeth,peakwidth=peakwidth,mVscale=mVscale,trials=trials,samples=samples,sample.freq=sample.freq,amp.dist=amp.dist,amp.sd=amp.sd,amp.mean=amp.mean,amp.range=amp.range,lat.dist=lat.dist,lat.sd=lat.sd,lat.mean=lat.mean,lat.range=lat.range,snr=snr,noisemethod=noisemethod,linkmethod=linkmethod,plot=plot)
+	funcall = list(signal=signal,sigmeth=sigmeth,peakwidth=peakwidth,mVscale=mVscale,trials=trials,samples=samples,sample.freq=sample.freq,amp.dist=amp.dist,amp.sd=amp.sd,amp.mean=amp.mean,amp.range=amp.range,lat.dist=lat.dist,lat.sd=lat.sd,lat.mean=lat.mean,lat.range=lat.range,snr=snr,noisemethod=noisemethod,linkmethod=linkmethod,plot=plot,poly=poly)
 	
 	#in HZ
 	ms = samples*(1/sample.freq)*1000
@@ -67,7 +62,6 @@ function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 			}
 		}
 	}
-	
 	
 	#rescale amps to mean 1
 	for(wave in 1:nwave) {
@@ -119,7 +113,6 @@ function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 		data[i,] = f
 		
 	}
-
 	
 	#make noise
 	noise = makeNoise(data,snr,noisemethod)
@@ -134,9 +127,7 @@ function(signal=c(125,-225),sigmeth='shift',peakwidth=15,mVscale=500,trials=100,
 			data[i,]=data[i,]*mnoise*snr	
 		}
 	}	
-	
 	dataplusnoise = data + noise
-
 	
 	#check SNRS
 	nsd = dsd = numeric(nrow(data))
