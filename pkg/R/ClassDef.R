@@ -21,8 +21,8 @@ setClass(
 	prototype=prototype(
 		version=1,
 		build=2,
-		update=6,
-		svnrev=29
+		update=7,
+		svnrev=30
 	)#,
 	#package='swale'
 )

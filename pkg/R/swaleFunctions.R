@@ -249,7 +249,7 @@ rss <-
 function(swaledat) 
 #calculate rss
 {
-	if(class(swaledat)!='swale.internal') stop('Input must be of class \'swale.internal\'')
+	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
 	
 	#set estimation objects
 	Y = .eeg.data.data(.swale.internal.eeg.data(swaledat))
@@ -272,7 +272,9 @@ function(swaledat,correct=F,adjustWave=1,adjustAmp=1,adjustLat=1,adjustN=0)
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))-adjustN
 	rss = .swale.internal.rss(swaledat)
 	
-	aicvalue = try( 2*k+(n*(log(rss))) )
+	aicvalue = try( 2*k + n*(log(rss/n)) )
+	
+	
 	if(correct) aicvalue = aicvalue + ( (2*k*(k+1)) / (n-k-1) )
 		
 	return(aicvalue)
@@ -288,8 +290,10 @@ function(swaledat)
 	k = .basis.num.funcs(.swale.internal.basis(swaledat))*ncol(.swale.internal.waves(swaledat))+length(as.vector(.swale.internal.amps(swaledat)))+length(as.vector(.swale.internal.lats(swaledat)))
 	n = length(as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat))))
 	resids = as.vector(.eeg.data.data(.swale.internal.eeg.data(swaledat)) - .swale.internal.model(swaledat))
+	rss = .swale.internal.rss(swaledat)
 	
-	bicvalue = try( n*(log(var(resids)/n)) + k*log(n) )
+	#bicvalue = try( n*(log(var(resids)/n)) + k*log(n) )
+	bicvalue = try( n*(log(rss/n)) - k*log(n) )
 	
 	return(bicvalue)
 }
