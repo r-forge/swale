@@ -34,5 +34,37 @@ function(eegdat,window)
 
 }
 
+peakModel <-
+		function(data,window=NULL,thres=1e-03,plot=F) 
+#peakPick using 
+{
+	
+	trials = nrow(data)
+	
+	peakvec = vector('list',trials)
+	
+	for(i in 1:trials) {
+		
+		deriv = fdDeriv(matrix(data[i,],,1))
+		peaks = which(abs(deriv)<thres)
+		
+		if(!is.null(window)) {
+			rm = c(which(peaks<window[1]),which(peaks>window[2]))
+			if(length(rm)>0) peaks = peaks[-rm]
+		}
+		
+		if(plot) {
+			par(ask=T)
+			plot(data[i,],type='l',lwd=2,col=1,bty='n',main='peaks')
+			points(peaks,data[i,peaks],pch=19,col=2)	
+		}
+		
+		peakvec[[i]] = list(lat=peaks,amps=data[i,peaks])
+		
+	}
+	
+	return(peakvec)	
+}
+
 
 

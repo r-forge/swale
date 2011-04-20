@@ -1,7 +1,7 @@
 Package: swale
 Type: Package
 Title: SWALE: Simultaneous Waveform Amplitude and Latency Estimation.
-Version: 1.2-7
+Version: 1.2-8
 Date:  2011-02-09
 Author: Wouter D. Weeda
 Maintainer: Wouter D. Weeda <w.d.weeda@gmail.com>

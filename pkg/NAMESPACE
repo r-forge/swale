@@ -5,6 +5,7 @@ export(
 	cleanTrials,
 	setMaxLat,
 	peakPick,
+	peakModel,
 	iterate,
 	iterateDiscard,
 	iterateSplit,
