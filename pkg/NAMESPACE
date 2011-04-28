@@ -6,6 +6,7 @@ export(
 	setMaxLat,
 	peakPick,
 	peakModel,
+	zerocross,
 	iterate,
 	iterateDiscard,
 	iterateSplit,
