@@ -115,6 +115,46 @@ function(swaledat,method='mean')
 
 
 calcSolution <-
+function(swaledat,stmethod='max') 
+#calculate solution of a swale.solution object
+{
+	if(class(swaledat)!='swale.solution') stop('Input must be of class \'swale.solution\'')
+	
+	solution = swaledat
+	swaledat = .swale.solution.internal(swaledat)
+	.swale.solution.model(solution) = .swale.internal.model(swaledat)
+	.swale.solution.waveform(solution) = .basis.matrix(.swale.internal.basis(swaledat))%*%.swale.internal.waves(swaledat)
+	.swale.solution.derivwave(solution) = .basis.deriv(.swale.internal.basis(swaledat))%*%.swale.internal.waves(swaledat)
+	.swale.solution.aic(solution) = aic(swaledat)
+	
+	#calc amplitude and latency
+	control = .swale.solution.control(solution)
+	splits = .control.split.data(control)
+	if(is.null(splits)) nsplit = 1 else nsplit = nrow(splits)
+	exp.peak = method = maxlatfac = discarded = vector('list',nsplit)
+	
+			
+	for(i in 1:nsplit) {
+		exp.peak[[i]] = splits[i,]
+		method[[i]] = stmethod
+		discarded[[i]] = 15
+		maxlatfac[[i]] = 1.5
+	}
+	
+	sm = summarizeModel(solution,exp.peak=exp.peak,method=method,maxlatfac=maxlatfac,discarded=discarded,plot = F, output = F)
+	
+	for(i in 1:nsplit) {
+		.swale.solution.amplitude(solution)[,i] = sm[[i]]$amps
+		.swale.solution.latency(solution)[,i] = sm[[i]]$lats
+	}
+	
+	.swale.solution.discard(solution) = numeric(nrow(.swale.solution.amplitude(solution))) 
+	.swale.solution.discard(solution)[unique(which(is.na(cbind(.swale.solution.amplitude(solution),.swale.solution.latency(solution))),arr=T)[,1])] = 1
+	
+	return(solution)
+}
+
+calcSolutionOld <-
 function(swaledat) 
 #calculate solution of a swale.solution object
 {

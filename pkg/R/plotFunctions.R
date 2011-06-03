@@ -52,17 +52,19 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 			legs = character(0)
 			cols = numeric(0)
 			sumwaves = numeric(ncol(eegdat))
-			
+
 			#plot waves
 			for(wave in 1:ncol(.swale.solution.waveform(swalesol))) {
 				#st.wave = (TP%*%waveform[,wave]*amps[trial,wave]+(dTP%*%waveform[,wave])*lats[trial,wave]) #check on function
-				st.wave = (.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*.swale.solution.latency(swalesol)[trial,wave])*.swale.solution.amplitude(swalesol)[trial,wave]
+				st.wave = (.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*(.swale.internal.lats(.swale.solution.internal(swalesol))[trial,wave]/.swale.internal.amps(.swale.solution.internal(swalesol))[trial,wave]))*.swale.internal.amps(.swale.solution.internal(swalesol))[trial,wave]
 				#sumwaves = sumwaves + st.wave #check on function
 				
 				if(what=='all') {
 					lines(st.wave,lty=2,lwd=2,col=wave+1)
-					legs=c(legs,paste('Wave(',wave,'): ',round(.swale.solution.latency(swalesol)[trial,wave]*(1/sampRate)*1000),' @ ',round(.swale.solution.amplitude(swalesol)[trial,wave],2),sep=''))
-					cols=c(cols,wave+1)
+					points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=1,pch=19,cex=1.2)
+					
+					#legs=c(legs,paste('Wave(',wave,'): ',round(.swale.solution.latency(swalesol)[trial,wave]*(1/sampRate)*1000),' @ ',round(.swale.solution.amplitude(swalesol)[trial,wave],2),sep=''))
+					#cols=c(cols,wave+1)
 				}
 			}
 			
@@ -71,9 +73,9 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 			#lines(sumwaves,col=gray(1),lty=1,lwd=1) #check on function
 			
 			#plot legend
-			legs = c('Data','Model',legs)
-			cols = c(gray(.5),1,cols)
-			legend(1,rng[2],legend=legs,col=cols,lwd=3,lty=1,bty='n')
+			#legs = c('Data','Model',legs)
+			#cols = c(gray(.5),1,cols)
+			#legend(1,rng[2],legend=legs,col=cols,lwd=3,lty=1,bty='n')
 			
 		} #discardloop
 	}
@@ -186,12 +188,13 @@ function(swalesol)
 
 
 eeg.plot <- 
-function(dat,sampRate=512,main='',order=NULL) 
+function(dat,sampRate=512,main='',order=NULL,latency=NULL) 
 {
 	require(colorRamps)
 	
 	if(!is.null(order)) {
 		dat = dat[order,]
+		latency = matrix(latency[order,],,ncol(latency))
 	}
 	
 	layout(cbind(rbind(matrix(1,8,10),matrix(3,2,10)),rep(2,10)))
@@ -199,6 +202,16 @@ function(dat,sampRate=512,main='',order=NULL)
 	image(t(dat),ylab='trial',axes=F,col=matlab.like(64),main=main)
 	axis(2,at=seq(0,1,.25),labels=round(seq(0,dim(dat)[1],dim(dat)[1]/4),0))
 	axis(1,at=seq(0,1,.1),labels=rep('',11))
+	
+	if(!is.null(latency)) {
+		over = matrix(NA,dim(dat)[1],dim(dat)[2])
+		for(i in 1:nrow(over)) {
+			for(j in 1:ncol(latency)) {
+				over[i,latency[i,j]] = 1
+			}
+		}
+		image(t(over),add=T,col=1)
+	}
 	
 	legbar=seq(round(min(dat),0),round(max(dat),0))
 	legbar=matrix(legbar,1,length(legbar))

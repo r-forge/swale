@@ -35,13 +35,14 @@ function(eegdat,window)
 }
 
 peakModel <-
-function(data,window=NULL,plot=F,simdat=NULL,simeeg=NULL) 
-#peakPick using derivative
+function(data,window=NULL,plot=F) 
+#peakPick using derivative of single-trial models
 {
 	
 	trials = nrow(data)
-	
 	peakvec = vector('list',trials)
+	
+	if(plot) par(ask=T)
 	
 	for(i in 1:trials) {
 		
@@ -52,27 +53,11 @@ function(data,window=NULL,plot=F,simdat=NULL,simeeg=NULL)
 			rm = c(which(peaks<window[1]),which(peaks>window[2]))
 			if(length(rm)>0) peaks = peaks[-rm]
 		}
-		
 		if(plot) {
-			par(ask=T)
-			
-			if(!is.null(simeeg)) {
-				plot(simeeg[i,],col='gray',type='l',lty=1,bty='n',main='peaks')
-				lines(data[i,],lwd=2,col=1)
-				rsq = (sum(simeeg[i,]^2)-sum((simeeg[i,]-data[i,])^2))/sum(simeeg[i,]^2)
-				text(200,5,round(rsq,6))
-				
-			} else plot(data[i,],type='l',lwd=2,col=1,bty='n',main='peaks')
-			
-			points(peaks,data[i,peaks],pch=19,col=2)
-			points(window,data[i,window],pch=19,col=4)
-			
-			if(!is.null(simdat)) {
-				points(150-simdat$lats[i,1],data[i,round(150-simdat$lats[i,1])],col=3,pch=21,cex=1.5)
-				
-			}
+			plot(data[i,],lwd=2,col=1,type='l')
+			points(peaks,data[i,peaks],col=2,lwd=2)
 		}
-	
+		
 		peakvec[[i]] = list(lat=peaks,amps=data[i,peaks])
 		
 	}
@@ -80,8 +65,9 @@ function(data,window=NULL,plot=F,simdat=NULL,simeeg=NULL)
 	return(peakvec)	
 }
 
-
-zerocross <- function(vec) 
+zerocross <- 
+function(vec) 
+#define zero-crossings
 {
 	len = length(vec)
 	sig = sign(vec)

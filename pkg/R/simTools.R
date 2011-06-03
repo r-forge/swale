@@ -350,7 +350,18 @@ swaleEEG <-
 	
 }
 
-
+plotDatEst <- function(estlat,datlat,model,data)
+{
+	par(las=1,ask=T)
+	for(i in 1:nrow(data)) {
+		plot(NA,NA,ylim=range(c(as.vector(model),as.vector(data))),xlim=c(1,ncol(data)),bty='n',xlab='time',ylab='mV',main=paste('trial [',i,']'))	
+		lines(data[i,],col='darkgray',lwd=2,lty=1)
+		lines(model[i,],col='black',lwd=2,lty=1)
+		points(datlat[i],model[i,datlat[i]],col=2,pch=21,bg=2,cex=1)
+		points(estlat[i],model[i,estlat[i]],col=4,pch=21,lwd=2)
+	}
+	
+}
 
 
 

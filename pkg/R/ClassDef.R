@@ -20,8 +20,8 @@ setClass(
 	),
 	prototype=prototype(
 		version=1,
-		build=2,
-		update=8,
+		build=3,
+		update=2,
 		svnrev=31
 	)#,
 	#package='swale'
@@ -116,7 +116,7 @@ setClass(
 				iter.limit='numeric',
 				iter.convergence='numeric',
 				split.type='character', #how to split
-				split.data='ANY',       #where to split
+				split.data='ANY',       #where to split ROWS = SPLITS (col = start,end)
 				start.value = 'matrix',
 				output='logical',
 				version='ANY'
