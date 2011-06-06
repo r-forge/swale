@@ -61,7 +61,7 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 				
 				if(what=='all') {
 					lines(st.wave,lty=2,lwd=2,col=wave+1)
-					points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=1,pch=19,cex=1.2)
+					points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=wave+1,pch=19,cex=1.3)
 					
 					#legs=c(legs,paste('Wave(',wave,'): ',round(.swale.solution.latency(swalesol)[trial,wave]*(1/sampRate)*1000),' @ ',round(.swale.solution.amplitude(swalesol)[trial,wave],2),sep=''))
 					#cols=c(cols,wave+1)
@@ -69,7 +69,7 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 			}
 			
 			#plot cumulativemodel 
-			lines(swalemod[trial,],lwd=5,col=1)
+			lines(swalemod[trial,],lwd=2,col=1)
 			#lines(sumwaves,col=gray(1),lty=1,lwd=1) #check on function
 			
 			#plot legend
@@ -138,35 +138,33 @@ function(swalesol)
 	if(length(disc)>0) {
 		amps = matrix(.swale.solution.amplitude(swalesol)[-which(.swale.solution.discard(swalesol)!=0),],,ncol(.swale.solution.amplitude(swalesol)))
 	} else amps = .swale.solution.amplitude(swalesol)
-		
-	allden = try(density(amps),silen=T)
-	if(class(allden)!='try-error') {
-		plot(NA,NA,xlim=range(allden$x),ylim=range(allden$y)*1.5,xlab='',ylab='',main='Amplitude distributions',bty='n',axes=F)
-		axis(1)
-		axis(2,at=axTicks(2))
-		for(wave in 1:ncol(.swale.solution.amplitude(swalesol))) {
-			lines(allden$x,density(amps[,wave])$y,col=wave+1,lwd=3)
+	
+	hs = hist(amps,plot=F)
+	yl = max(hs$counts*1.2)
+	xl = range(amps)
+	
+	hist(amps[,1],xlim=xl,ylim=c(0,yl),xlab='Amplitude',ylab='Frequency',col=2,main='Amplitude distribution')
+	if(ncol(.swale.solution.latency(swalesol))>1) {
+		for(wave in 2:ncol(.swale.solution.latency(swalesol))) {
+			hist(amps[,wave],add=T,col=wave+1)
 		}
-	} else {
-		plot(NA,NA,xlim=c(0,1),ylim=c(0,1),bty='n',axes=F,xlab='',ylab='')
 	}
-
+	
 	#plot latency densities
 	disc = which(.swale.solution.discard(swalesol)!=0)
 	if(length(disc)>0) {
 		lats = matrix(.swale.solution.latency(swalesol)[-which(.swale.solution.discard(swalesol)!=0),],,ncol(.swale.solution.latency(swalesol)))
 	} else lats = .swale.solution.latency(swalesol)
 	
-	allden = try(density(lats),silen=T)	
-	if(class(allden)!='try-error') {
-		plot(NA,NA,xlim=range(allden$x),ylim=range(allden$y)*1.5,xlab='',ylab='',main='Latency distributions',bty='n',axes=F)
-		axis(1)
-		axis(2,at=axTicks(2))
-		for(wave in 1:ncol(.swale.solution.latency(swalesol))) {
-			lines(allden$x,density(lats[,wave])$y,col=wave+1,lwd=3)
+	hs = hist(lats,plot=F)
+	yl = max(hs$counts*1.2)
+	xl = range(lats)
+	
+	hist(lats[,1],xlim=xl,ylim=c(0,yl),xlab='Latency',ylab='Frequency',col=2,main='Latency distribution')
+	if(ncol(.swale.solution.latency(swalesol))>1) {
+		for(wave in 2:ncol(.swale.solution.latency(swalesol))) {
+			hist(lats[,wave],add=T,col=wave+1)
 		}
-	} else {
-		plot(NA,NA,xlim=c(0,1),ylim=c(0,1),bty='n',axes=F,xlab='',ylab='')
 	}
 	
 	#plot discarded data

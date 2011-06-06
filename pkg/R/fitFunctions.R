@@ -50,23 +50,6 @@ function(swaledat,control=new('control'),posGradStop=F)
 			swaledat_new = rss(swaledat_new)
 		}
 		
-		#order if multiple waveforms are estimated
-		if(.control.split.type(control)=='window') {
-			
-			if(iterNum==1) {
-				cuts = split.f.one(swaledat_old,.control.split.data(control))
-				swaledat_new = split.f.fix(swaledat_old,cuts)
-			}
-			
-			if(iterNum>1) {
-				swaledat_new = average.f(swaledat_old)
-				swaledat_new = split.f.fix(swaledat_new,cuts)
-			}
-			
-			swaledat_new = estimate.ab(swaledat_new)
-			swaledat_new = model(swaledat_new)
-			swaledat_new = rss(swaledat_new)
-		}
 		
 		#calculate objective and gradient
 		objective = c(objective,.swale.internal.rss(swaledat_new))
@@ -115,47 +98,7 @@ function(swaledat,method='mean')
 
 
 calcSolution <-
-function(swaledat,stmethod='max') 
-#calculate solution of a swale.solution object
-{
-	if(class(swaledat)!='swale.solution') stop('Input must be of class \'swale.solution\'')
-	
-	solution = swaledat
-	swaledat = .swale.solution.internal(swaledat)
-	.swale.solution.model(solution) = .swale.internal.model(swaledat)
-	.swale.solution.waveform(solution) = .basis.matrix(.swale.internal.basis(swaledat))%*%.swale.internal.waves(swaledat)
-	.swale.solution.derivwave(solution) = .basis.deriv(.swale.internal.basis(swaledat))%*%.swale.internal.waves(swaledat)
-	.swale.solution.aic(solution) = aic(swaledat)
-	
-	#calc amplitude and latency
-	control = .swale.solution.control(solution)
-	splits = .control.split.data(control)
-	if(is.null(splits)) nsplit = 1 else nsplit = nrow(splits)
-	exp.peak = method = maxlatfac = discarded = vector('list',nsplit)
-	
-			
-	for(i in 1:nsplit) {
-		exp.peak[[i]] = splits[i,]
-		method[[i]] = stmethod
-		discarded[[i]] = 15
-		maxlatfac[[i]] = 1.5
-	}
-	
-	sm = summarizeModel(solution,exp.peak=exp.peak,method=method,maxlatfac=maxlatfac,discarded=discarded,plot = F, output = F)
-	
-	for(i in 1:nsplit) {
-		.swale.solution.amplitude(solution)[,i] = sm[[i]]$amps
-		.swale.solution.latency(solution)[,i] = sm[[i]]$lats
-	}
-	
-	.swale.solution.discard(solution) = numeric(nrow(.swale.solution.amplitude(solution))) 
-	.swale.solution.discard(solution)[unique(which(is.na(cbind(.swale.solution.amplitude(solution),.swale.solution.latency(solution))),arr=T)[,1])] = 1
-	
-	return(solution)
-}
-
-calcSolutionOld <-
-function(swaledat) 
+function(swaledat,summarize = TRUE) 
 #calculate solution of a swale.solution object
 {
 	if(class(swaledat)!='swale.solution') stop('Input must be of class \'swale.solution\'')
@@ -170,191 +113,35 @@ function(swaledat)
 	.swale.solution.derivwave(solution) = .basis.deriv(.swale.internal.basis(swaledat))%*%.swale.internal.waves(swaledat)
 	.swale.solution.aic(solution) = aic(swaledat)
 	
+	if(summarize) {
+		#calc amplitude and latency
+		control = .swale.solution.control(solution)
+		peaks = .control.peak.windows(control)
+		nsplit = length(peaks)
+		
+		sm = summarizeModel(solution,exp.peak=.control.peak.windows(control),method=.control.peak.method(control),maxlatfac=.control.max.lat(control),discarded=.control.disc.edge(control),plot = F, output = F)
+		
+		for(i in 1:nsplit) {
+			.swale.solution.amplitude(solution)[,i] = sm[[i]]$amps
+			.swale.solution.latency(solution)[,i] = sm[[i]]$lats
+		}
+	}
+	
+	.swale.solution.discard(solution) = numeric(nrow(.swale.solution.amplitude(solution))) 
+	.swale.solution.discard(solution)[unique(which(is.na(cbind(.swale.solution.amplitude(solution),.swale.solution.latency(solution))),arr=T)[,1])] = 1
+	
 	return(solution)
 }
 
 
-iterateDiscard <-
-function(swaledat,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F) 
-#iterate and discard trials until good fit is reached
-{
-	stopDisc = FALSE 
-	removals = numeric(0)
-	
-	while(!stopDisc) {
-		#iterate
-		solution = iterate(swaledat,control,posGradStop)
-		solution = calcSolution(solution)
-		
-		#check solution
-		if(is.null(latRange)) latRange = setMaxLat(solution,prec.fac=1.5,plot=F)
-		solution = cleanTrials(solution,lat.thres=latRange,amp.thres=ampRange)
-		
-		#determine discards
-		if(sum(.swale.solution.discard(solution))==0) {
-			stopDisc = TRUE
-			break()
-		} else {
-			
-			if(length(which(.swale.solution.discard(solution)!=0))>=(nrow(.eeg.data.data(.swale.internal.eeg.data(.swale.solution.internal(solution))))-1)) { 
-				warning('Stopping iterations no valid model!')
-				stopDisc=TRUE
-				break()
-			}
-			
-			#set data 
-			oldat = .swale.internal.eeg.data(.swale.solution.internal(solution))
-			
-			#make new data with discards removed
-			newdat = .eeg.data.data(.swale.internal.eeg.data(.swale.solution.internal(solution)))
-			
-			remrows = which(.swale.solution.discard(solution)!=0)
-			newdat = newdat[-remrows,]
-			newdat = detrend(newdat,meantrend=F)
-			
-			#make new data element
-			data = new('eeg.data')
-			.eeg.data.data(data) = as.matrix(newdat$data)
-			.eeg.data.trend(data) = as.matrix(newdat$trend)
-			.eeg.data.trials(data) = nrow(newdat$data)
-			.eeg.data.samples(data) = .eeg.data.samples(oldat)
-			.eeg.data.sampRate(data) = .eeg.data.sampRate(oldat)
-			.eeg.data.channel(data) = .eeg.data.channel(oldat)
-			.eeg.data.condition(data) = .eeg.data.condition(oldat)
-						
-			swaledat = new('swale.internal',eeg.data=data,basis=.swale.internal.basis(.swale.solution.internal(solution)))
-			.control.start.value(control) = makeStart(swaledat)
-			
-		} #discardsloop
-		removals = c(removals,list(remrows))
-		cat('[discard] Removed',length(which(.swale.solution.discard(solution)!=0)),'trials. Refitting.\n')
-		
-	} #main iteration loop
-			
-	cat('All trials valid.\n')
-	return(list(solution=solution,removals=removals))
-	
-}
-
-iterateSplit <-
-function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F) 
-#iterate and split based on removal of estimated waves
-{
-	#split up the data	
-	cuts = split.f.one(.swale.solution.internal(swalesol),.control.split.data(control))
-	swalesol_new = split.f.fix(.swale.solution.internal(swalesol),cuts)
-	swalesol_new = estimate.ab(swalesol_new)
-		
-	#set estimation objects
-	TP = .basis.matrix(.swale.internal.basis(swalesol_new))
-	dTP = .basis.deriv(.swale.internal.basis(swalesol_new))
-	a = .swale.internal.amps(swalesol_new)
-	b = .swale.internal.lats(swalesol_new)
-	f = .swale.internal.waves(swalesol_new)
-	origdat = .eeg.data.data(.swale.internal.eeg.data(swalesol_new))
-	trials = nrow(origdat)
-	
-	
-	solutionlist = vector('list',ncol(f))
-	
-	#reverse estimate
-	for(waves in 1:ncol(f)) {
-		
-		#set correct matrices
-		newdat = origdat
-		cTP = TP
-		cdTP = dTP
-		ca = as.matrix(a[,-waves])
-		cb = as.matrix(b[,-waves])
-		cf = as.matrix(f[,-waves])
-		
-		#remove wavetrend from data 
-		fhat = matrix(0,trials,nrow(cTP))
-		for(i in 1:ncol(ca)) {
-			for(trial in 1:trials) {
-				newdat[trial,] = newdat[trial,] - ((cTP%*%cf[,i])*(ca[trial,i])+(cdTP%*%cf[,i])*(cb[trial,i]))
-			}
-		}		
-	
-		#set swaleobject newdata
-		.eeg.data.data(.swale.internal.eeg.data(swalesol_new)) = newdat
-		control_new = control
-		.control.split.type(control_new) = 'none'
-		.control.split.data(control_new) = NULL
-		
-		cat('[split] Fitting wave [',waves,']\n',sep='')
-		
-		#iterate onewave
-		solution = iterate(swalesol_new,control_new,posGradStop=posGradStop)	
-		solution = calcSolution(solution)
-		solutionlist[[waves]] = list(solution=solution,data=newdat)
-		
-	}
-	
-	#rebuild solution
-	soldouble = new('swale.internal')
-	.swale.internal.eeg.data(soldouble) = .swale.internal.eeg.data(.swale.solution.internal(swalesol))
-	.swale.internal.basis(soldouble) = .swale.internal.basis(.swale.solution.internal(swalesol))
-	
-	#concatenate waves and amps and lats
-	waves = amps = lats = numeric(0)
-	for(i in 1:length(solutionlist)) {
-		waves = cbind(waves,.swale.internal.waves(.swale.solution.internal(solutionlist[[i]]$solution)))
-		amps = cbind(amps,.swale.internal.amps(.swale.solution.internal(solutionlist[[i]]$solution)))
-		lats = cbind(lats,.swale.internal.lats(.swale.solution.internal(solutionlist[[i]]$solution)))
-	}
-	.swale.internal.waves(soldouble) = waves
-	.swale.internal.amps(soldouble) = amps
-	.swale.internal.lats(soldouble) = lats
-	
-	#recalculate model/rss/aic
-	soldouble = model(soldouble)
-	soldouble = rss(soldouble)
-
-	#recalculate solution
-	soldouble = new('swale.solution',internal=soldouble,control=control)	
-	soldouble = calcSolution(soldouble)
-	
-	#return
-	return(soldouble)
-}
-
-
-autoSplit <-
-function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F,gradlim=.1)
-#split reiterated splitted solution again
-{
-	stopSplit = FALSE
-	
-	newsol = swalesol
-	i=1
-	
-	obj = gradient = numeric(0)
-	while(!stopSplit) {
-		if(i>1) .swale.internal.waves(.swale.solution.internal(newsol)) = matrix(apply(.swale.internal.waves(.swale.solution.internal(soldouble)),1,sum),,1)	
-		soldouble = iterateSplit(newsol,control=control)
-		obj = c(obj,soldouble@internal@rss)
-		
-		if(i>1) {
-			cat('[gradient]',obj[i]-obj[i-1],'\n')
-			gradient = c(gradient,obj[i]-obj[i-1])
-			if(abs(gradient[i-1])<=gradlim) stopSplit=T
-		}
-		
-		i=i+1
-	}
-	
-	return(soldouble)
-	
-}
 
 
 multiSplit <-
-function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F,stepsize=1)
+function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),posGradStop=F,stepsize=1,fixstep=NULL)
 {
 	
 	swaledat = .swale.solution.internal(swalesol)
-	window = .control.split.data(control)
+	window = .control.peak.windows(control)
 	
 	#set estimation objects
 	TP = .basis.matrix(.swale.internal.basis(swaledat))
@@ -362,13 +149,15 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 	ft = TP%*%f
 	
 	#search for maxima within window
-	nc = nrow(window)
+	nc = length(window)
 	if(nc>2) {warning('multiSplit not available for more than two splits');return(NULL)}
 	
 	mx = numeric(nc)
-	for(i in 1:nc) 	mx[i] = window[i,1] + which.max(abs(ft[window[i,1]:window[i,2]]))
+	for(i in 1:nc) 	mx[i] = window[[i]][1] + which.max(abs(ft[window[[i]][1]:window[[i]][2]]))
 	
 	steps = seq(mx[1],mx[2],stepsize)
+	
+	if(!is.null(fixstep)) steps = fixstep
 	
 	aicvec = numeric(length(steps))
 	
@@ -386,7 +175,7 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 		
 		#recalculate solution
 		swalesol_new = new('swale.solution',internal=swalesol_new,control=control)	
-		swalesol_new = calcSolution(swalesol_new)
+		#swalesol_new = calcSolution(swalesol_new)
 		
 		aicvec[i] = aic(swalesol_new) 
 		
@@ -417,45 +206,3 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 	
 }
 
-testSplits <-
-function(swaledat,control=new('control')) 
-#calculate and test which (amplitude or latency) contribute to the differences
-{
-	if(class(swaledat)=='swale.solution') swaledat = .swale.solution.internal(swaledat) else if(class(swaledat)!='swale.internal') stop('input must be of class internal or solution')
-	
-	numwave = ncol(.swale.internal.waves(swaledat))
-	numtrial = .eeg.data.trials(.swale.internal.eeg.data(swaledat))
-	
-	if(numwave<=1) warning('Only one wave in model, new models might give same results!')
-	
-	#allfix
-	allfix = swaledat
-	.swale.internal.amps(allfix) = matrix(apply(.swale.internal.amps(swaledat),1,mean),numtrial,numwave)
-	.swale.internal.lats(allfix) = matrix(apply(.swale.internal.lats(swaledat),1,mean),numtrial,numwave)
-	allfix = model(allfix)
-	allfix = rss(allfix)
-	allfix = new('swale.solution',internal=allfix,control=control)	
-	allfix = calcSolution(allfix)
-	.swale.solution.aic(allfix) = aic(allfix,adjustAmp=numwave,adjustLat=numwave)
-	
-	#ampfix
-	ampfix = swaledat
-	.swale.internal.amps(ampfix) = matrix(apply(.swale.internal.amps(swaledat),1,mean),numtrial,numwave)
-	ampfix = model(ampfix)
-	ampfix = rss(ampfix)
-	ampfix = new('swale.solution',internal=ampfix,control=control)	
-	ampfix = calcSolution(ampfix)
-	.swale.solution.aic(ampfix) = aic(ampfix,adjustAmp=numwave)
-	
-	#latfix
-	latfix = swaledat
-	.swale.internal.lats(latfix) = matrix(apply(.swale.internal.lats(swaledat),1,mean),numtrial,numwave)
-	latfix = model(latfix)
-	latfix = rss(latfix)
-	latfix = new('swale.solution',internal=latfix,control=control)	
-	latfix = calcSolution(latfix)
-	.swale.solution.aic(latfix) = aic(latfix,adjustLat=numwave)
-	
-	return(list(allfix=allfix,ampfix=ampfix,latfix=latfix))
-	
-}

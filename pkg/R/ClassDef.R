@@ -21,8 +21,8 @@ setClass(
 	prototype=prototype(
 		version=1,
 		build=3,
-		update=2,
-		svnrev=31
+		update=3,
+		svnrev=32
 	)#,
 	#package='swale'
 )
@@ -116,7 +116,10 @@ setClass(
 				iter.limit='numeric',
 				iter.convergence='numeric',
 				split.type='character', #how to split
-				split.data='ANY',       #where to split ROWS = SPLITS (col = start,end)
+				peak.windows='ANY',       #where to split ROWS = SPLITS (col = start,end)
+				peak.method = 'ANY',
+				disc.edge = 'ANY',
+				max.lat = 'ANY',
 				start.value = 'matrix',
 				output='logical',
 				version='ANY'
@@ -125,6 +128,10 @@ setClass(
 				iter.limit = 500,
 				iter.convergence = 1e-6,
 				split.type = 'none',
+				peak.windows = NULL,
+				peak.method =  list('max'),
+				disc.edge =  list(15),
+				max.lat = list(1.5),
 				output = TRUE,
 				version=new('version')
 		)#,

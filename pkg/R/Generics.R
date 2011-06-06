@@ -494,14 +494,47 @@ standMethod <- function(x, value) {x@split.type<- value;x}
 setGeneric(slotreplace,standGen)
 setReplaceMethod(funcname,classname,standMethod)
 classname <-'control'
-funcname <-'.control.split.data'
-standGen <- function(object) standardGeneric('.control.split.data')
-standMethod <- function(object) object@split.data
+funcname <-'.control.peak.windows'
+standGen <- function(object) standardGeneric('.control.peak.windows')
+standMethod <- function(object) object@peak.windows
 setGeneric(funcname,standGen,package='swale')
 setMethod(funcname,classname,standMethod)
-slotreplace <-'.control.split.data<-'
-standGen <- function(x, value) standardGeneric('.control.split.data<-')
-standMethod <- function(x, value) {x@split.data<- value;x}
+slotreplace <-'.control.peak.windows<-'
+standGen <- function(x, value) standardGeneric('.control.peak.windows<-')
+standMethod <- function(x, value) {x@peak.windows<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'control'
+funcname <-'.control.peak.method'
+standGen <- function(object) standardGeneric('.control.peak.method')
+standMethod <- function(object) object@peak.method
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.control.peak.method<-'
+standGen <- function(x, value) standardGeneric('.control.peak.method<-')
+standMethod <- function(x, value) {x@peak.method<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'control'
+funcname <-'.control.disc.edge'
+standGen <- function(object) standardGeneric('.control.disc.edge')
+standMethod <- function(object) object@disc.edge
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.control.disc.edge<-'
+standGen <- function(x, value) standardGeneric('.control.disc.edge<-')
+standMethod <- function(x, value) {x@disc.edge<- value;x}
+setGeneric(slotreplace,standGen)
+setReplaceMethod(funcname,classname,standMethod)
+classname <-'control'
+funcname <-'.control.max.lat'
+standGen <- function(object) standardGeneric('.control.max.lat')
+standMethod <- function(object) object@max.lat
+setGeneric(funcname,standGen,package='swale')
+setMethod(funcname,classname,standMethod)
+slotreplace <-'.control.max.lat<-'
+standGen <- function(x, value) standardGeneric('.control.max.lat<-')
+standMethod <- function(x, value) {x@max.lat<- value;x}
 setGeneric(slotreplace,standGen)
 setReplaceMethod(funcname,classname,standMethod)
 classname <-'control'
