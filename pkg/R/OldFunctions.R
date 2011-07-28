@@ -330,3 +330,57 @@ testSplits <-
 	
 }
 
+setMaxLatOld <-
+		function(swalesol,window=list(NULL),prec.fac=list(1.5),method=list('abs'),discarded=list(10),plot=F,manual=NULL) 
+#determine the maximum latency a waveform + derivative can model
+{
+	
+	if(length(grep('control',slotNames(new('swale.solution'))))!=0) swalesol = new('swale.solution',swalesol,discard=integer(0),control=new('control')) else swalesol = new('swale.solution',swalesol,discard=integer(0))
+	
+	ranges = vector('list',ncol(.swale.solution.waveform(swalesol)))
+	
+	for(wave in 1:ncol(.swale.solution.waveform(swalesol)))  {
+		
+		method[[wave]] = match.arg(method[[wave]],c('abs','max','min','close','firstmax','firstmin','lastmax','lastmin'))
+		
+		nsamp = .eeg.data.samples(.swale.internal.eeg.data(.swale.solution.internal(swalesol)))
+		
+		if(is.null(window[[wave]])) window[[wave]] = c(1,nsamp) 
+		
+		if(method[[wave]]=='abs') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+		if(method[[wave]]=='max') absmax = which.max((.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+		if(method[[wave]]=='min') absmax = which.min((.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+		if(method[[wave]]=='close') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+		if(method[[wave]]=='firstmax' | method[[wave]]=='firstmin') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+		if(method[[wave]]=='lastmax' | method[[wave]]=='lastmin') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+		
+		vseq = seq(-nsamp,nsamp,1)
+		maxes = numeric(length(vseq))
+		
+		p=1
+		for(s in vseq) {
+			trial = .swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*s
+			trial[1:discarded[[wave]]] = 0
+			trial[(length(trial)-discarded[[wave]]):(length(trial))] = 0
+			if(.swale.solution.waveform(swalesol)[absmax,wave]<0) maxes[p] = which.min(trial) else maxes[p] = which.max(trial)	
+			p=p+1
+		}
+		
+		latrange = ( range(maxes) - absmax ) * prec.fac[[wave]]
+		
+		if(plot) {
+			quartz('Latency Ranges',width=8,height=4)
+			layout(matrix(1:2,,2))
+			plot(.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*latrange[1],type='l',lwd=2,bty='n',xlab='time',ylab='mV',main=latrange[1])
+			plot(.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*latrange[2],type='l',lwd=2,bty='n',xlab='time',ylab='mV',main=latrange[2])
+			
+		}
+		
+		ranges[[wave]] = latrange
+	}
+	
+	#manual override
+	if(!is.null(manual)) ranges = manual
+	
+	return(ranges)
+}

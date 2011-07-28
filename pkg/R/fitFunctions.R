@@ -119,7 +119,7 @@ function(swaledat,summarize = TRUE)
 		peaks = .control.peak.windows(control)
 		nsplit = length(peaks)
 		
-		sm = summarizeModel(solution,exp.peak=.control.peak.windows(control),method=.control.peak.method(control),maxlatfac=.control.max.lat(control),discarded=.control.disc.edge(control),plot = F, output = F)
+		sm = summarizeModel(solution,plot=F,output=F)
 		
 		for(i in 1:nsplit) {
 			.swale.solution.amplitude(solution)[,i] = sm[[i]]$amps
@@ -163,8 +163,13 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 	
 	cat('[multisplit] fitting',length(steps),'splits...')
 	
+	if(.control.output(control)) cat('\n')
+	
 	for(i in 1:length(steps)) 
 	{
+		
+		if(.control.output(control)) cat( 'fitting split',i,'@',steps[i],'\n')
+		
 		#split and estimate
 		swalesol_new = split.f.fix(.swale.solution.internal(swalesol),steps[i])
 		swalesol_new = estimate.ab(swalesol_new)
@@ -180,6 +185,9 @@ function(swalesol,control=new('control'),latRange=NULL,ampRange=c(1e-06,Inf),pos
 		aicvec[i] = aic(swalesol_new) 
 		
 	}
+	
+	if(.control.output(control)) cat('\n')
+
 	cat('done\n')
 	#get best fit
 	names(aicvec) = steps

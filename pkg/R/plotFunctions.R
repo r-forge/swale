@@ -55,17 +55,20 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 
 			#plot waves
 			for(wave in 1:ncol(.swale.solution.waveform(swalesol))) {
+				
 				#st.wave = (TP%*%waveform[,wave]*amps[trial,wave]+(dTP%*%waveform[,wave])*lats[trial,wave]) #check on function
 				st.wave = (.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*(.swale.internal.lats(.swale.solution.internal(swalesol))[trial,wave]/.swale.internal.amps(.swale.solution.internal(swalesol))[trial,wave]))*.swale.internal.amps(.swale.solution.internal(swalesol))[trial,wave]
 				#sumwaves = sumwaves + st.wave #check on function
 				
 				if(what=='all') {
 					lines(st.wave,lty=2,lwd=2,col=wave+1)
-					points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=wave+1,pch=19,cex=1.3)
-					
+					if(!any(c(is.na(.swale.solution.amplitude(swalesol)[trial]),is.na(is.na(.swale.solution.latency(swalesol)[trial]))))) {
+						points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=wave+1,pch=19,cex=1.3)
+					} #incorrect amp/lat estimation
 					#legs=c(legs,paste('Wave(',wave,'): ',round(.swale.solution.latency(swalesol)[trial,wave]*(1/sampRate)*1000),' @ ',round(.swale.solution.amplitude(swalesol)[trial,wave],2),sep=''))
 					#cols=c(cols,wave+1)
 				}
+			
 			}
 			
 			#plot cumulativemodel 
@@ -298,4 +301,44 @@ function(dat,sampRate=512,main='',order=NULL,labs=T)
 }
 
 
-
+plotPeakMethods <-
+function(solution) 
+#plot the peak method function + ranges
+{
+	quartz(width=9,height=3)
+	layout(matrix(1:3,1,3,byrow=T))
+	avg = apply(.swale.solution.model(solution),2,mean)
+	ml = setMaxLat(solution)
+	
+	control = .swale.solution.control(solution)
+	
+	plot(avg,type='l',lwd=2,lty=1,col=1,ylim=range(avg)*1.2,main='Peak selection (average)')
+	st = .05
+	for(i in 1:ncol(.swale.solution.waveform(solution))) {
+		ranges = mean(.control.peak.windows(control)[[i]])+ml[[i]]
+		pm = peakModel(matrix(avg,1,),.control.peak.windows(control)[[i]])
+		arrows(.control.peak.windows(control)[[i]][1],max(avg)*(1+st),.control.peak.windows(control)[[i]][2],max(avg)*(1+st),angle=90,code=3,length=.05,lwd=2,col=i+1,lty=1)
+		for(j in 1:length(pm[[1]]$lat)) {
+			points(pm[[1]]$lat[j],pm[[1]]$amps[j],col=i+1,pch=19,cex=1.2)
+		}
+	
+	}
+	
+	#plot(avg,type='l',lwd=2,lty=1,col=1,ylim=range(avg)*1.2)
+	st = .05
+	for(i in 1:ncol(.swale.solution.waveform(solution))) {
+		tr = .swale.solution.waveform(solution)[,i]
+		plot(tr,type='l',lwd=2,lty=1,col=1,ylim=range(tr)*1.2,main=paste('Min/max within range wave',i))
+		ranges = mean(.control.peak.windows(control)[[i]])+ml[[i]]
+		pm = peakModel(matrix(tr,1,),ranges)
+		arrows(ranges[1],max(tr)*(1+st),ranges[2],max(tr)*(1+st),angle=90,code=3,length=.05,lwd=2,col=i+1,lty=2)
+		#arrows(.control.peak.windows(control)[[i]][1],max(tr)*(1+st),.control.peak.windows(control)[[i]][2],max(tr)*(1+st),angle=90,code=3,length=.05,lwd=2,col=i+1,lty=1)
+		
+		for(j in 1:length(pm[[1]]$lat)) {
+			points(pm[[1]]$lat[j],pm[[1]]$amps[j],col=i+1,pch=19,cex=1.2)
+		}
+		
+		points(.swale.solution.latency(solution)[,i],rep(min(tr)*1.05,length(.swale.solution.latency(solution)[,i])),col=i+1)
+			
+	}
+}

@@ -38,73 +38,51 @@ function(swalesol,lat.thres=c(-100,100),amp.thres=c(1e-3,1e2))
 }
 
 setMaxLat <-
-function(swalesol,window=list(NULL),prec.fac=list(1.5),method=list('abs'),discarded=list(10),plot=F) 
-#determine the maximum latency a waveform + derivative can model
+function(swalesol,plot=F) 
+#determine the maximum latency a waveform + derivative can model ** NOW FIXED RANGE
 {
 	
-	if(length(grep('control',slotNames(new('swale.solution'))))!=0) swalesol = new('swale.solution',swalesol,discard=integer(0),control=new('control')) else swalesol = new('swale.solution',swalesol,discard=integer(0))
+	#if(length(grep('control',slotNames(new('swale.solution'))))!=0) swalesol = new('swale.solution',swalesol,discard=integer(0),control=new('control')) else swalesol = new('swale.solution',swalesol,discard=integer(0))
 	
+	control = .swale.solution.control(swalesol)
 	ranges = vector('list',ncol(.swale.solution.waveform(swalesol)))
-	
-	for(wave in 1:ncol(.swale.solution.waveform(swalesol)))  {
-	
-		method[[wave]] = match.arg(method[[wave]],c('abs','max','min','close','first','last'))
-		nsamp = .eeg.data.samples(.swale.internal.eeg.data(.swale.solution.internal(swalesol)))
-		
-		if(is.null(window[[wave]])) window[[wave]] = c(1,nsamp) 
-		
-		if(method[[wave]]=='abs') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
-		if(method[[wave]]=='max') absmax = which.max((.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
-		if(method[[wave]]=='min') absmax = which.min((.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
-		if(method[[wave]]=='close') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
-		if(method[[wave]]=='first') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
-		if(method[[wave]]=='last') absmax = which.max(abs(.swale.solution.waveform(swalesol)[window[[wave]][1]:window[[wave]][2],wave]))+window[[wave]][1]-1
+	window = .control.peak.windows(control)
 
-		vseq = seq(-nsamp,nsamp,1)
-		maxes = numeric(length(vseq))
-		
-		p=1
-		for(s in vseq) {
-			trial = .swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*s
-			trial[1:discarded[[wave]]] = 0
-			trial[(length(trial)-discarded[[wave]]):(length(trial))] = 0
-			if(.swale.solution.waveform(swalesol)[absmax,wave]<0) maxes[p] = which.min(trial) else maxes[p] = which.max(trial)	
-			p=p+1
+	if(length(.control.max.lat(control)[[1]])>1) {
+		ranges = .control.max.lat(control)
+	} else {
+		for(i in 1:length(window)) {
+			rng = (window[[i]][1]*.control.max.lat(control)[[i]]-window[[i]][1])
+			abs = c((rng)*-1,(rng))
+			ranges[[i]] = abs
 		}
-	
-		latrange = ( range(maxes) - absmax ) * prec.fac[[wave]]
-	
-		if(plot) {
-			quartz('Latency Ranges',width=8,height=4)
-			layout(matrix(1:2,,2))
-			plot(.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*latrange[1],type='l',lwd=2,bty='n',xlab='time',ylab='mV',main=latrange[1])
-			plot(.swale.solution.waveform(swalesol)[,wave]+.swale.solution.derivwave(swalesol)[,wave]*latrange[2],type='l',lwd=2,bty='n',xlab='time',ylab='mV',main=latrange[2])
-			
-		}
-	
-		ranges[[wave]] = latrange
 	}
-	
+		
 	return(ranges)
 }
 
 
-summarizeModel <-
-function(swale.solution,exp.peak=list(NULL),method=list('max'),maxlatfac=list(1.5),discarded=list(10),plot=F,output=T) 
+summarizeModel <- 
+function(swale.solution,plot=F,output=T) 
 #show and plot model summary (maxlat,latency+amplitude solution)
 {
 	numwave = ncol(.swale.solution.waveform(swale.solution))
+	intern = .swale.solution.internal(swale.solution)
+	control = .swale.solution.control(swale.solution)
+	
+	exp.peak = .control.peak.windows(control)
+	method = .control.peak.method(control)
+	maxlatfac = .control.max.lat(control)
+	
 	outpeak = vector('list',numwave)
 	
-	intern = .swale.solution.internal(swale.solution)
-	
 	if(numwave!=length(exp.peak)) stop('exp.peak must be a list of length numwaves.')
-	
-	ml = setMaxLat(swale.solution,window=exp.peak,prec.fac=maxlatfac,method=method,discarded=discarded,plot=F)
+
+	ml = setMaxLat(swale.solution,plot=F)
 	
 	for(wave in 1:numwave) {
 		
-		method[[wave]] = match.arg(method[[wave]],c('abs','max','min','close','first','last'))
+		method[[wave]] = match.arg(method[[wave]],c('abs','max','min','close','firstmax','firstmin','lastmax','lastmin'))
 		
 		wavemod = intern
 		.swale.internal.waves(wavemod) = matrix(.swale.internal.waves(intern)[,wave],,1)
@@ -132,17 +110,31 @@ function(swale.solution,exp.peak=list(NULL),method=list('max'),maxlatfac=list(1.
 			
 			if(method[[wave]]=='abs') peak = which.max(abs(peaks[[trials]]$amps))
 			if(method[[wave]]=='max') {
-				peak = which.max(peaks[[trials]]$amps)
-				if(length(peak)!=0) if(peaks[[trials]]$amps[peak]<0) peak = numeric(0) 	
+				minmax = which(attr(peaks[[trials]]$lat,'minmax')==1)
+				peak = minmax[which.max(abs(peaks[[trials]]$amps[minmax]))]
 			}
 			if(method[[wave]]=='min') {
-				peak = which.min(peaks[[trials]]$amps)
-				if(length(peak)!=0) if(peaks[[trials]]$amps[peak]>0) peak = numeric(0) 	
+				minmax = which(attr(peaks[[trials]]$lat,'minmax')==-1)
+				peak = minmax[which.max(abs(peaks[[trials]]$amps[minmax]))] 	
 			}
 			if(method[[wave]]=='close') peak = which.min(abs(peaks[[trials]]$lat-mean(exp.peak[[wave]])))
-			if(method[[wave]]=='first') peak = 1
-			if(method[[wave]]=='last') peak = length(peaks[[trials]]$amps)
-
+			if(method[[wave]]=='firstmax') {
+				minmax = which(attr(peaks[[trials]]$lat,'minmax')==1)
+				peak = minmax[1]
+			}			
+			if(method[[wave]]=='firstmin') {
+				minmax = which(attr(peaks[[trials]]$lat,'minmax')==-1)
+				peak = minmax[1]
+			}
+			if(method[[wave]]=='lastmax') {
+				minmax = which(attr(peaks[[trials]]$lat,'minmax')==1)
+				peak = minmax[length(minmax)]
+			}
+			if(method[[wave]]=='lastmin') {
+				minmax = which(attr(peaks[[trials]]$lat,'minmax')==-1)
+				peak = minmax[length(minmax)]
+			}
+			
 			if(length(peak)!=0) {
 				selpeak$amps[trials] = peaks[[trials]]$amps[peak]
 				selpeak$lats[trials] = peaks[[trials]]$lat[peak]

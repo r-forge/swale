@@ -36,6 +36,7 @@ export(
 	snrHeaven,
 	plotAmpLat,
 	plotDatEst,
+	plotPeakMethods,
 	summarizeModel,
 	estimate.f,
 	average.f,

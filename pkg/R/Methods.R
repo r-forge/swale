@@ -64,14 +64,20 @@ setMethod('summary','swale.solution',
 			cat(' BIC            : ',bic(object),'\n')
 			cat(' ','\n')
 			
+			ml = setMaxLat(object,F)
+			
 			nwaves = ncol(object@internal@waves)
 			cat(' [summary] ',nwaves,'@',object@internal@basis@num.funcs,'\n')
-			cat('  wave [1]\n')
+			cat('  wave [1] (',object@control@peak.windows[[1]][1],',',object@control@peak.windows[[1]][2],')\n',sep='')
+			cat('    method          :',object@control@peak.method[[1]],'\n')
+			cat('    latency ranges  :',ml[[1]][1],',',ml[[1]][2],'\n')
 			cat('    amplitude (IQR) :',round(quantile(object@amplitude[,1],c(.25,.5,.75)),4),'\n')
 			cat('    latency   (IQR) :',round(quantile(object@latency[,1],c(.25,.5,.75)),4),'\n')
 			if(nwaves>1) {
 				for(i in 2:nwaves) {
-					cat('  wave [',i,']\n',sep='')
+					cat('  wave [',i,'] (',object@control@peak.windows[[i]][1],',',object@control@peak.windows[[i]][2],')\n',sep='')
+					cat('    method          :',object@control@peak.method[[i]],'\n')
+					cat('    latency ranges  :',ml[[i]][1],',',ml[[i]][2],'\n')
 					cat('    amplitude (IQR) :',round(quantile(object@amplitude[,i],c(.25,.5,.75)),4),'\n')
 					cat('    latency   (IQR) :',round(quantile(object@latency[,i],c(.25,.5,.75)),4),'\n')
 				}

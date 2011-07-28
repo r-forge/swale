@@ -48,14 +48,26 @@ function(data,window=NULL,plot=F)
 		
 		deriv = fdDeriv(matrix(data[i,],,1))
 		peaks = zerocross(deriv)
+		minmax = attr(peaks,'minmax')
 		
 		if(!is.null(window)) {
 			rm = c(which(peaks<window[1]),which(peaks>window[2]))
-			if(length(rm)>0) peaks = peaks[-rm]
+			if(length(rm)>0) {
+				peaks = peaks[-rm]
+				minmax = minmax[-rm]
+				attr(peaks,'minmax') = minmax
+			}
 		}
 		if(plot) {
 			plot(data[i,],lwd=2,col=1,type='l')
 			points(peaks,data[i,peaks],col=2,lwd=2)
+			mm = which(attr(peaks,'minmax')==1)
+			mm = mm[which.max(abs(data[i,peaks[mm]]))]			
+			if(length(mm)>0) text(peaks[mm],data[i,peaks[mm]],'MAX')
+			
+			mm = which(attr(peaks,'minmax')==-1)
+			mm = mm[which.max(abs(data[i,peaks[mm]]))]
+			if(length(mm)>0) text(peaks[mm],data[i,peaks[mm]],'MIN')
 		}
 		
 		peakvec[[i]] = list(lat=peaks,amps=data[i,peaks])
@@ -71,15 +83,23 @@ function(vec)
 {
 	len = length(vec)
 	sig = sign(vec)
-	zc = numeric(0)
+	zc = mm = numeric(0)
 	
 	for(i in 1:(len-1)) {
 		
-		if(sig[i]==1 & sig[i+1]==-1) zc = c(zc,(i-1+which.min(abs(c(sig[i],sig[i+1])))))
-		if(sig[i]==-1 & sig[i+1]==1) zc = c(zc,(i-1+which.min(abs(c(sig[i],sig[i+1])))))
+		if(sig[i]==1 & sig[i+1]==-1) {
+			zc = c(zc,(i-1+which.min(abs(c(sig[i],sig[i+1])))))
+			mm = c(mm,1)
+		}
+		if(sig[i]==-1 & sig[i+1]==1) {
+			zc = c(zc,(i-1+which.min(abs(c(sig[i],sig[i+1])))))
+			mm = c(mm,-1)	
+		}
 	
 	}
 	
+	attr(zc,'minmax') = mm
+	#browser()
 	return(zc)
 	
 }
