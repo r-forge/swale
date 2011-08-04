@@ -32,6 +32,30 @@ function(data,filsd=10,fillen=100,filmean=50)
 	
 }
 
+plot.freq <- 
+function(vec,Hz=512)
+#plot frequencies of lowpass filter
+{
+	
+	Nyq <- Hz/2
+	blocklen <- length(vec)*(1/Hz)
+	
+	vecfft <- fft(vec)
+	magn <- Mod(vecfft)
+	
+	magn <- magn[1:(length(magn)/2)]
+	
+	xax <- c(1:length(magn)/blocklen)
+	
+	quartz(width=3,height=6,title='Low-pass filter settings')
+	layout(1:2)
+	par(las=1)
+	plot(vec,type='l',bty='n',lwd=2,xlab='time samples',ylab='mV',main='Filter (spatial)')
+	plot(xax,magn,type='l',lwd=2,bty='n',xlab='frequencies Hz',ylab='Magnitude',main='Frequency plot')
+		
+}
+
+
 detrend <- 
 function(data,meantrend=F) 
 #remove linear trend from data

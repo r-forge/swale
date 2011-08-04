@@ -24,6 +24,7 @@ export(
 	eeg.plot,
 	eeg.plot.raster,
 	lowpass,
+	plot.freq,
 	detrend,
 	demean,
 	s2t,

@@ -39,7 +39,11 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 	swalemod = .swale.solution.model(swalesol)
 		
 	#create plot
-	for(trial in 1:nrow(eegdat)) {
+	if(length(which)==0) trialvec = 1:nrow(eegdat) else trialvec = which
+	
+	colvec = c(4,3,5:ncol(waveform))
+	
+	for(trial in trialvec) {
 		if(!.swale.solution.discard(swalesol)[trial]) {
 			par(ask=T,las=1)
 			plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste('trial [',trial,']',sep=''))
@@ -61,9 +65,9 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 				#sumwaves = sumwaves + st.wave #check on function
 				
 				if(what=='all') {
-					lines(st.wave,lty=2,lwd=2,col=wave+1)
+					lines(st.wave,lty=2,lwd=2,col=colvec[wave])
 					if(!any(c(is.na(.swale.solution.amplitude(swalesol)[trial]),is.na(is.na(.swale.solution.latency(swalesol)[trial]))))) {
-						points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=wave+1,pch=19,cex=1.3)
+						points(.swale.solution.latency(swalesol)[trial,wave],.swale.solution.amplitude(swalesol)[trial,wave],col=colvec[wave],pch=19,cex=1.3)
 					} #incorrect amp/lat estimation
 					#legs=c(legs,paste('Wave(',wave,'): ',round(.swale.solution.latency(swalesol)[trial,wave]*(1/sampRate)*1000),' @ ',round(.swale.solution.amplitude(swalesol)[trial,wave],2),sep=''))
 					#cols=c(cols,wave+1)
