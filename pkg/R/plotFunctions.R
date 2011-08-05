@@ -47,7 +47,8 @@ function(swalesol,what=c('all','sum'),which=numeric(0))
 		if(!.swale.solution.discard(swalesol)[trial]) {
 			par(ask=T,las=1)
 			plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste('trial [',trial,']',sep=''))
-			axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+			#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+			prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)
 			axis(2)
 			
 			#plot avg data
@@ -113,7 +114,8 @@ function(swalesol)
 	rng = range(c(avgmod,avgdat))
 	par(ask=F,las=1)
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste(.eeg.data.channel(.swale.internal.eeg.data(.swale.solution.internal(swalesol))),':',.eeg.data.condition(.swale.internal.eeg.data(.swale.solution.internal(swalesol))),' - ','Model fit (AIC): ',round(.swale.solution.aic(swalesol)),sep=''))
-	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)
 	axis(2)
 	lines(avgdat,lty=1,lwd=3,col=gray(.5))
 	lines(avgmod,lty=1,lwd=3,col=gray(0))
@@ -121,7 +123,8 @@ function(swalesol)
 	
 	#plot waves
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=c(-2,2),xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main='Waveform')
-	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)
 	axis(2)
 	for(wave in 1:ncol(.swale.solution.waveform(swalesol))) {
 		dmwave = (.swale.solution.waveform(swalesol)[,wave]-mean(.swale.solution.waveform(swalesol)[,wave]))
@@ -131,7 +134,8 @@ function(swalesol)
 	
 	#plot derivs
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=c(-2,2),xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main='Derivative')
-	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)	
 	axis(2)
 	for(wave in 1:ncol(.swale.solution.derivwave(swalesol))) {
 		dmwave = (.swale.solution.derivwave(swalesol)[,wave]-mean(.swale.solution.derivwave(swalesol)[,wave]))
@@ -177,7 +181,8 @@ function(swalesol)
 	#plot discarded data
 	rng = range(c(.swale.solution.model(swalesol),eegdat))
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=rng,xlab='time (ms)',ylab=expression(paste(mu,'V',sep='')),bty='n',axes=F,main=paste('Discarded trials (',length(which(.swale.solution.discard(swalesol)!=0)),')',sep=''))
-	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)
 	axis(2)
 	if(length(.swale.solution.discard(swalesol))>0) {
 		for(i in which(.swale.solution.discard(swalesol)!=0)) {
@@ -229,7 +234,8 @@ function(dat,sampRate=512,main='',order=NULL,latency=NULL)
 	par(mar=c(5.1, 4.1, .1, 1.1),mgp=c(3,1,0))
 	#image(matrix(avgdat,length(avgdat),1),col=matlab.like(64),axes=F)
 	plot(1:length(avgdat),avgdat,bty='n',axes=F,xlab='',ylab=expression(paste(mu,'V',sep='')),type='l',lwd=2)
-	axis(1,pos=0,at=axTicks(1),label=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,pos=0,at=axTicks(1),label=round(axTicks(1)*(1/sampRate)*1000))
+	prettyTime(1,c(1,length(avgdat)),Hz=sampRate)	
 	axis(2)
 	mtext('time (ms)',1,cex=0.7,padj=2.5)
 	
@@ -250,7 +256,8 @@ function(swalesol)
 	yrng = range(eegdat)
 	par(las=1,ask=F)
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=yrng,bty='n',xlab='time(ms)',ylab=expression(paste(mu,'V',sep='')),axes=F,main='Single Trials')
-	axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
+	prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)
 	axis(2)
 	
 	for(i in 1:nrow(eegdat)) lines(eegdat[i,],lwd=1,col=i)
@@ -274,7 +281,8 @@ function(simdata,swalesol,what='signal',main='',yrng=NULL)
 	par(las=1,ask=F)
 	plot(NA,NA,xlim=c(1,ncol(eegdat)),ylim=yrng,bty='n',xlab='time(ms)',ylab=expression(paste(mu,'V',sep='')),axes=F,main=main)
 	#axis(1,at=axTicks(1),labels=round(axTicks(1)*(1/sampRate)*1000))
-	axis(1,at=c(77,154,230,307),labels=c(150,300,450,600))
+	#axis(1,at=c(77,154,230,307),labels=c(150,300,450,600))
+	prettyTime(1,c(1,ncol(eegdat)),Hz=sampRate)
 	axis(2)
 	#if(what=='signal') lines(apply(simdata$data,2,mean),lwd=2,col=1)
 	if(what=='all') {
@@ -300,7 +308,7 @@ function(dat,sampRate=512,main='',order=NULL,labs=T)
 	}
 	image(1:ncol(dat),1:nrow(dat),t(dat),axes=F,col=matlab.like(64),main=main,xlab='time(ms)',ylab='')
 	if(labs) axis(2,c(1,nrow(dat)/2,nrow(dat)),label=c(1,nrow(dat)/2,nrow(dat)))
-	if(labs) axis(1,at=c(77,154,230,307),labels=c(150,300,450,600))
+	if(labs) prettyTime(1,c(1,ncol(dat)),Hz=sampRate) #axis(1,at=c(77,154,230,307),labels=c(150,300,450,600))
 	
 }
 
@@ -345,4 +353,47 @@ function(solution)
 		points(.swale.solution.latency(solution)[,i],rep(min(tr)*1.05,length(.swale.solution.latency(solution)[,i])),col=i+1)
 			
 	}
+}
+
+prettyTime <- 
+function(axisnum=1,samprange=NULL,Hz=512,ticks=length(axTicks(axisnum)),every=NULL,scale=c('ms','s'),plot=T) 
+{
+	#make pretty division
+	tsrange = range(samprange*(1/Hz)*1000)
+		
+	secs = tsrange[2]%/%1000
+	dsec = tsrange[2]%/%100
+	msec = tsrange[2]%/%10
+	mmsec =tsrange[2]%/%1
+		
+	if(secs>0) {
+		if(round(msec/10) > secs) secs = secs + 1
+		if(is.null(every)) pticks=seq(tsrange[1]%/%1000,secs,length.out=ticks) else seq(tsrange[1]%/%1000,secs,every)
+		ats = pticks/(1/Hz*1)
+		labs = pticks*1000
+		#cat('secs')
+	} else if(dsec>0) {
+		if(round(msec/10) > dsec) dsec = dsec + 1
+		if(is.null(every)) pticks=seq(tsrange[1]%/%100,dsec,length.out=ticks) else pticks=seq(tsrange[1]%/%100,dsec,every)
+		ats = pticks/(1/Hz*10)
+		labs = pticks*100
+		#cat('dsec')
+	} else if(msec>0) {
+		if(round(mmsec/10) > msec) msec =msec + 1
+		if(is.null(every)) pticks=seq(tsrange[1]%/%10,msec,length.out=ticks) else pticks=seq(tsrange[1]%/%100,msec,every)
+		ats = pticks/(1/Hz*100)
+		labs = pticks*10
+		#cat('msec')
+	} else if(msec>0) {
+		if(round((tsrange[2]%/%.1)/10) > msec) msec =msec + 1
+		if(is.null(every)) pticks=seq(tsrange[1]%/%1,mmsec,length.out=ticks) else pticks=seq(tsrange[1]%/%100,mmsec,every)
+		ats = pticks/(1/Hz*1000)
+		labs = pticks*1
+		#cat('mmsec')
+	}
+	
+	if(plot) axis(axisnum,at=ats,label=labs)	
+	
+	return(invisible(list(ticks=pticks,at=ats,label=labs)))
+		
 }

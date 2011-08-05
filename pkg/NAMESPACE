@@ -21,6 +21,7 @@ export(
 	plotSolution,
 	plotTraces,
 	plotTraceAverage,
+	prettyTime,
 	eeg.plot,
 	eeg.plot.raster,
 	lowpass,
